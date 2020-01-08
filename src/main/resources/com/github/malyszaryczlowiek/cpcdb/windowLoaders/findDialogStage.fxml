@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="360.0" prefWidth="585.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.SearchCompoundStageController">
+   <children>
+      <Label layoutX="25.0" layoutY="32.0" prefHeight="25.0" text="Smiles:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
+      <Label layoutX="25.0" layoutY="71.0" prefHeight="25.0" text="Compound Number:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
+      <Label layoutX="25.0" layoutY="106.0" prefHeight="25.0" text="Form:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="80.0" />
+      <Label layoutX="26.0" layoutY="143.0" prefHeight="25.0" text="Container:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="115.0" />
+      <Label layoutX="26.0" layoutY="180.0" prefHeight="25.0" text="Storage Place:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="150.0" />
+      <Label layoutX="26.0" layoutY="218.0" prefHeight="25.0" text="Modified Time:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="185.0" />
+      <Label layoutX="26.0" layoutY="254.0" prefHeight="25.0" text="Stability:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="220.0" />
+      <TextField fx:id="searchSmiles" layoutX="171.0" layoutY="27.0" prefHeight="25.0" prefWidth="250.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="165.0" AnchorPane.topAnchor="10.0" />
+      <ComboBox fx:id="searchSmilesComboBox" layoutX="445.0" layoutY="27.0" prefHeight="26.0" prefWidth="145.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+      <TextField fx:id="searchCompoundNumber" layoutX="171.0" layoutY="66.0" prefHeight="25.0" prefWidth="250.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="165.0" AnchorPane.topAnchor="45.0" />
+      <ComboBox fx:id="compoundNumberComboBox" layoutX="430.0" layoutY="45.0" prefHeight="26.0" prefWidth="145.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0" />
+      <TextField fx:id="searchForm" layoutX="171.0" layoutY="101.0" prefHeight="25.0" prefWidth="405.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="80.0" />
+      <TextField fx:id="searchContainer" layoutX="172.0" layoutY="138.0" prefHeight="25.0" prefWidth="405.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="115.0" />
+      <TextField fx:id="searchStoragePlace" layoutX="172.0" layoutY="175.0" prefHeight="25.0" prefWidth="405.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="150.0" />
+      <ComboBox fx:id="searchBeforeAfter" layoutX="171.0" layoutY="213.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="25.0" prefWidth="190.0" promptText="Before or After" AnchorPane.leftAnchor="170.0" AnchorPane.topAnchor="185.0" />
+      <DatePicker fx:id="searchDatePicker" editable="false" layoutX="373.0" layoutY="213.0" onAction="#onDatePickerDateEdited" prefHeight="25.0" prefWidth="205.0" AnchorPane.leftAnchor="370.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="185.0" />
+      <ComboBox fx:id="searchArgonStability" layoutX="171.0" layoutY="249.0" prefHeight="25.0" prefWidth="190.0" promptText="Argon Stability" AnchorPane.leftAnchor="170.0" AnchorPane.topAnchor="220.0" />
+      <ComboBox fx:id="searchTempStability" layoutX="373.0" layoutY="249.0" prefHeight="25.0" prefWidth="205.0" promptText="Temperature Stability" AnchorPane.leftAnchor="370.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="220.0" />
+      <Button fx:id="cancelButton" layoutX="442.0" layoutY="259.0" mnemonicParsing="false" onAction="#onCancelButtonClicked" prefWidth="70.0" text="Cancel" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="90.0" />
+      <Button fx:id="searchButton" layoutX="497.0" layoutY="289.0" mnemonicParsing="false" onAction="#onSearchButtonClicked" prefHeight="25.0" prefWidth="70.0" text="Search" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+      <Label layoutX="26.0" layoutY="259.0" prefHeight="25.0" text="Additional Info:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="255.0" />
+      <TextArea fx:id="additionalInfoTextArea" layoutX="170.0" layoutY="268.0" prefHeight="60.0" prefWidth="405.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="170.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="255.0" />
+   </children>
+</AnchorPane>

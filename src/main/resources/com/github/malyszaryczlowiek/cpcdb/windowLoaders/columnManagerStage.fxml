@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="235.0" prefWidth="550.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.ColumnManagerStageController">
+   <children>
+      <ToggleButton fx:id="selectAll" layoutX="210.0" layoutY="14.0" mnemonicParsing="false" onAction="#onSelectAllClicked" prefHeight="25.0" prefWidth="170.0" text="Select All" AnchorPane.leftAnchor="190.0" AnchorPane.topAnchor="10.0" />
+      <ToggleButton fx:id="smiles" layoutX="14.0" layoutY="62.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Smiles" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
+      <ToggleButton fx:id="compoundNum" layoutX="190.0" layoutY="45.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Compound Number" AnchorPane.leftAnchor="190.0" AnchorPane.topAnchor="45.0" />
+      <ToggleButton fx:id="amount" layoutX="370.0" layoutY="62.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Amount" AnchorPane.leftAnchor="370.0" AnchorPane.topAnchor="45.0" />
+      <ToggleButton fx:id="unit" layoutX="64.0" layoutY="113.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="2.0" prefWidth="170.0" text="Unit" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="80.0" />
+      <ToggleButton fx:id="form" layoutX="195.0" layoutY="113.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Form" AnchorPane.leftAnchor="190.0" AnchorPane.topAnchor="80.0" />
+      <ToggleButton fx:id="tempStability" layoutX="370.0" layoutY="120.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Temperature Stability" AnchorPane.leftAnchor="370.0" AnchorPane.topAnchor="80.0" />
+      <ToggleButton fx:id="argon" layoutX="9.0" layoutY="120.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Argon" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="115.0" />
+      <ToggleButton fx:id="container" layoutX="230.0" layoutY="120.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Container" AnchorPane.leftAnchor="190.0" AnchorPane.topAnchor="115.0" />
+      <ToggleButton fx:id="storagePlace" layoutX="401.0" layoutY="120.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Storage Place" AnchorPane.leftAnchor="370.0" AnchorPane.topAnchor="115.0" />
+      <ToggleButton fx:id="lastModification" layoutX="31.0" layoutY="166.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Last Modification" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="150.0" />
+      <ToggleButton fx:id="additionalInfo" layoutX="190.0" layoutY="150.0" mnemonicParsing="false" onAction="#onSelectedColumnClicked" prefHeight="25.0" prefWidth="170.0" text="Additional Info" AnchorPane.leftAnchor="190.0" AnchorPane.topAnchor="150.0" />
+      <Button fx:id="close" layoutX="370.0" layoutY="184.0" mnemonicParsing="false" onAction="#onCloseButtonClicked" prefHeight="25.0" prefWidth="100.0" text="Close" AnchorPane.leftAnchor="440.0" AnchorPane.topAnchor="200.0" />
+   </children>
+</AnchorPane>

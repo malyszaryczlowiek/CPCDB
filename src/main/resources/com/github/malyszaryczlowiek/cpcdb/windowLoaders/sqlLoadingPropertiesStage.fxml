@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<ScrollPane prefHeight="302.0" prefWidth="987.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.SqlPropertiesStageController">
+   <content>
+      <AnchorPane prefHeight="300.0" prefWidth="980.0">
+         <children>
+            <TextField fx:id="remoteServerAddressIP" layoutX="240.0" layoutY="14.0" prefHeight="25.0" prefWidth="330.0" promptText="127.0.0.1" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="10.0" />
+            <TextField fx:id="remotePortNumber" layoutX="240.0" layoutY="48.0" prefHeight="25.0" prefWidth="330.0" promptText="3306" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="45.0" />
+            <TextField fx:id="remoteUser" layoutX="240.0" layoutY="82.0" prefHeight="25.0" prefWidth="330.0" promptText="UserName" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="80.0" />
+            <PasswordField fx:id="remotePassphrase" layoutX="240.0" layoutY="116.0" prefHeight="25.0" prefWidth="330.0" promptText="MySQL Server Passphrase" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="115.0" />
+            <TextField fx:id="localPortNumber" layoutX="220.0" layoutY="160.0" prefHeight="25.0" prefWidth="330.0" promptText="3306" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="160.0" />
+            <TextField fx:id="localUser" layoutX="220.0" layoutY="195.0" prefHeight="25.0" prefWidth="330.0" promptText="UserName" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="195.0" />
+            <PasswordField fx:id="localPassphrase" layoutX="220.0" layoutY="230.0" prefHeight="25.0" prefWidth="330.0" promptText="MySQL Server Passphrase" AnchorPane.leftAnchor="220.0" AnchorPane.topAnchor="230.0" />
+            <Button fx:id="saveButton" layoutX="490.0" layoutY="342.0" mnemonicParsing="false" onAction="#onSaveButtonClicked" prefHeight="25.0" prefWidth="100.0" text="Save" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+            <Button fx:id="cancelButton" layoutX="405.0" layoutY="342.0" mnemonicParsing="false" onAction="#onCancelButtonClicked" prefHeight="25.0" prefWidth="100.0" text="Cancel" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="120.0" />
+            <Label layoutX="14.0" layoutY="116.0" prefHeight="26.0" prefWidth="210.0" text="Remote Server Passphrase:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="115.0" />
+            <Label layoutX="14.0" layoutY="48.0" prefHeight="26.0" prefWidth="203.0" text="Remote Server Port Number:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
+            <Label layoutX="14.0" layoutY="14.0" prefHeight="26.0" prefWidth="203.0" text="Remote Database Server IP:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
+            <Label layoutX="14.0" layoutY="82.0" prefHeight="26.0" prefWidth="171.0" text="Remote User Name:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="80.0" />
+            <Label layoutX="10.0" layoutY="160.0" prefHeight="26.0" prefWidth="203.0" text="Local Server Port Number:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="160.0" />
+            <Label layoutX="10.0" layoutY="195.0" prefHeight="26.0" prefWidth="171.0" text="Local User Name:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="195.0" />
+            <Label layoutX="10.0" layoutY="230.0" prefHeight="26.0" prefWidth="179.0" text="Local Server Passphrase:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="230.0" />
+            <Accordion layoutX="570.0" layoutY="76.0" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="560.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+               <panes>
+                  <TitledPane expanded="false" prefHeight="280.0" prefWidth="279.0">
+                    <content>
+                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="260.0" prefWidth="400.0">
+                           <children>
+                              <CheckBox fx:id="remoteUseUnicode" disable="true" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" selected="true" text="Use Unicode (default True)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                              <CheckBox fx:id="remoteUseJDBCCompilantTimeZone" disable="true" layoutX="21.0" layoutY="45.0" mnemonicParsing="false" prefHeight="25.0" selected="true" text="Use JDBC Compilant Timezone Shift (default True)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="35.0" />
+                              <CheckBox fx:id="remoteUseLegacyDatetimeMode" disable="true" layoutX="21.0" layoutY="80.0" mnemonicParsing="false" prefHeight="25.0" text="Use Legacy DateTime Code (default False)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="70.0" />
+                              <ChoiceBox fx:id="remoteServerTimeZone" disable="true" layoutX="139.0" layoutY="115.0" prefHeight="25.0" prefWidth="150.0" AnchorPane.leftAnchor="140.0" AnchorPane.topAnchor="105.0" />
+                              <Label disable="true" layoutX="21.0" layoutY="111.0" prefHeight="25.0" text="Server TimeZone:" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="105.0" />
+                           </children>
+                        </AnchorPane>
+                    </content>
+                     <graphic>
+                        <CheckBox fx:id="remoteServerConnectorSettingsCheckBox" mnemonicParsing="false" onAction="#useRemoteServerConnectorCheckBoxClicked" text="Use Remote Server Connector Settings (default False)" />
+                     </graphic>
+                  </TitledPane>
+                  <TitledPane expanded="false" prefHeight="280.0" prefWidth="279.0">
+                     <graphic>
+                        <CheckBox fx:id="localServerConnectorSettingsCheckBox" mnemonicParsing="false" onAction="#useLocalServerConnectorCheckBoxClicked" selected="true" text="Use Local Server Connector Settings (default True)" />
+                     </graphic>
+                     <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="260.0" prefWidth="400.0">
+                           <children>
+                              <CheckBox fx:id="localUseUnicode" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" prefHeight="25.0" selected="true" text="Use Unicode (default True)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                              <CheckBox fx:id="localUseJDBCCompilantTimeZone" layoutX="21.0" layoutY="45.0" mnemonicParsing="false" prefHeight="25.0" selected="true" text="Use JDBC Compilant Timezone Shift (default True)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="35.0" />
+                              <CheckBox fx:id="localUseLegacyDatetimeMode" layoutX="21.0" layoutY="80.0" mnemonicParsing="false" prefHeight="25.0" text="Use Legacy DateTime Code (default False)" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="70.0" />
+                              <ChoiceBox fx:id="localServerTimeZone" layoutX="139.0" layoutY="115.0" prefHeight="25.0" prefWidth="150.0" AnchorPane.leftAnchor="140.0" AnchorPane.topAnchor="105.0" />
+                              <Label layoutX="21.0" layoutY="111.0" prefHeight="25.0" text="Server TimeZone:" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="105.0" />
+                           </children>
+                        </AnchorPane>
+                     </content>
+                  </TitledPane>
+               </panes>
+            </Accordion>
+            <Separator layoutX="163.0" layoutY="186.0" prefHeight="10.0" prefWidth="540.0" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="145.0" />
+         </children>
+      </AnchorPane>
+   </content>
+</ScrollPane>

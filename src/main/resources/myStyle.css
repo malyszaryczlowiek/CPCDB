@@ -1,0 +1,93 @@
+.root {
+ciemnetlo: #696969;
+tlo: #808080;
+napisy: #d3d3d3;
+lavenda: #e6e6fa;
+kosc: #fffff0;
+}
+/*
+.pane {
+-fx-background-color: tlo;
+}
+
+
+.table-view {
+-fx-background-color: ciemnetlo;
+}
+
+
+.indexed-cell:even {
+-fx-background-color: tlo;
+-fx-text-fill: kosc;
+}
+
+.indexed-cell:odd {
+-fx-background-color: ciemnetlo;
+-fx-text-fill: kosc;
+}
+*/
+
+
+
+
+
+
+.table-view-size13 {
+-fx-cell-size: 13;
+-fx-font-size: 11;
+}
+
+.table-view-size14 {
+-fx-cell-size: 14;
+-fx-font-size: 12;
+}
+
+.table-view-size15 {
+-fx-cell-size: 15;
+-fx-font-size: 13;
+}
+
+.table-view-size16 {
+-fx-cell-size: 16;
+-fx-font-size: 14;
+}
+
+.table-view-size17 {
+-fx-cell-size: 17;
+-fx-font-size: 15;
+}
+
+.table-view-size18 {
+-fx-cell-size: 18;
+-fx-font-size: 16;
+}
+
+.table-view-size19 {
+-fx-cell-size: 19;
+-fx-font-size: 17;
+}
+
+.table-view-size20 {
+-fx-cell-size: 20;
+-fx-font-size: 18;
+}
+
+.table-view-size21 {
+-fx-cell-size: 21;
+-fx-font-size: 19;
+}
+
+.table-view-size22 {
+-fx-cell-size: 22;
+-fx-font-size: 20;
+}
+
+.table-view-size23 {
+-fx-cell-size: 23;
+-fx-font-size: 21;
+}
+
+.table-view-size24 {
+-fx-cell-size: 24;
+-fx-font-size: 22;
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox fx:id="mainSceneVBox" alignment="CENTER" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController">
+    <children>
+        <MenuBar maxWidth="4100.0" VBox.vgrow="NEVER">
+            <menus>
+                <Menu fx:id="menuFile" mnemonicParsing="false" onShowing="#menuFile" text="File">
+                    <items>
+                  <MenuItem fx:id="menuFileAddCompound" mnemonicParsing="false" onAction="#menuFileAddCompound" text="Add Compound" />
+                  <MenuItem fx:id="menuFileLoadFullTable" mnemonicParsing="false" onAction="#reloadTable" text="Load Full Table Again" />
+                  <MenuItem fx:id="menuFileSearch" mnemonicParsing="false" onAction="#onFileSearchMenuItemClicked" text="Search" />
+                  <MenuItem fx:id="menuFileSave" mnemonicParsing="false" onAction="#onMenuFileSaveClicked" text="Save" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="menuFilePreferences" mnemonicParsing="false" onAction="#onMenuFilePreferencesClicked" text="Preferences" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="menuFileQuit" mnemonicParsing="false" onAction="#onMenuFileQuit" text="Quit" />
+                    </items>
+                </Menu>
+                <Menu fx:id="menuEdit" mnemonicParsing="false" onShowing="#menuEdit" text="Edit">
+                    <items>
+                        <MenuItem fx:id="menuEditUndo" mnemonicParsing="false" onAction="#onUndoClicked" text="Undo" />
+                        <MenuItem fx:id="menuEditRedo" mnemonicParsing="false" onAction="#onRedoClicked" text="Redo" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem mnemonicParsing="false" onAction="#onMenuEditSelectAll" text="Select All" />
+                        <MenuItem fx:id="onMenuEditUnSelectAll" mnemonicParsing="false" text="Unselect All" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="menuEditSelectedCompound" mnemonicParsing="false" onAction="#showEditCompoundStage" text="Edit Selected Compound" />
+                  <MenuItem fx:id="menuEditDeleteSelectedCompounds" mnemonicParsing="false" onAction="#deleteSelectedCompounds" text="Delete Selected Compound(s)" />
+                    </items>
+                </Menu>
+            <Menu mnemonicParsing="false" text="View">
+              <items>
+                  <CheckMenuItem fx:id="menuViewFullScreen" mnemonicParsing="false" onAction="#changeFullScreenMode" text="Full Screen" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="menuViewShowHideColumns" mnemonicParsing="false" onAction="#onShowHideColumn" text="Show/Hide Columns" />
+                  <MenuItem fx:id="menuViewShowAllColumns" disable="true" mnemonicParsing="false" onAction="#onMenuShowAllColumns" text="Show All Columns" />
+              </items>
+            </Menu>
+                <Menu mnemonicParsing="false" text="Help">
+                    <items>
+                        <MenuItem fx:id="menuHelpAboutCPCDB" mnemonicParsing="false" text="About CPCDB" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+      <TableView fx:id="mainSceneTableView" editable="true" prefHeight="1500.0" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idCol" editable="false" maxWidth="4100.0" minWidth="40.0" prefWidth="-1.0" text="Id" visible="false" />
+          <TableColumn fx:id="smilesCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Smiles" />
+          <TableColumn fx:id="compoundNumCol" minWidth="150.0" prefWidth="-1.0" resizable="false" text="Compound Number" />
+            <TableColumn fx:id="amountCol" minWidth="100.0" prefWidth="-1.0" sortable="false" text="Amount" />
+            <TableColumn fx:id="unitCol" minWidth="70.0" prefWidth="-1.0" resizable="false" sortable="false" text="Unit" />
+            <TableColumn fx:id="formCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Form" />
+            <TableColumn fx:id="tempStabilityCol" minWidth="120.0" prefWidth="-1.0" resizable="false" sortable="false" text="Temp Stability" />
+            <TableColumn fx:id="argonCol" minWidth="70.0" prefWidth="-1.0" resizable="false" sortable="false" text="Argon" />
+            <TableColumn fx:id="containerCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Container" />
+            <TableColumn fx:id="storagePlaceCol" minWidth="350.0" prefWidth="-1.0" sortable="false" text="Storage Place" />
+            <TableColumn fx:id="lastModificationCol" editable="false" minWidth="230.0" prefWidth="230.0" resizable="false" text="Last Modification" />
+            <TableColumn fx:id="additionalInfoCol" minWidth="652.0" prefWidth="652.0" sortable="false" text="Additional Info" />
+        </columns>
+         <contextMenu>
+            <ContextMenu>
+              <items>
+                  <MenuItem fx:id="editSelectedCompoundContext" mnemonicParsing="false" onAction="#showEditCompoundStage" text="Edit Selected Compound" />
+                  <MenuItem fx:id="deleteSelectedCompoundsContext" mnemonicParsing="false" onAction="#deleteSelectedCompounds" text="Delete Compound(s)" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="showHideColumnsContext" mnemonicParsing="false" onAction="#onShowHideColumn" text="Show/Hide Columns" />
+                  <MenuItem fx:id="showAllColumnsContext" disable="true" mnemonicParsing="false" onAction="#onMenuShowAllColumns" text="Show All Columns" />
+              </items>
+            </ContextMenu>
+         </contextMenu>
+      </TableView>
+      <ToolBar maxWidth="4100.0" minHeight="22.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="22.0">
+         <items>
+            <Separator orientation="VERTICAL" />
+            <Text fx:id="currentStatus" onMouseClicked="#onShowErrors" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" textAlignment="RIGHT" wrappingWidth="300.0" />
+            <Separator orientation="VERTICAL" />
+            <ProgressBar fx:id="progressBar" minHeight="20.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="200.0" progress="0.0" />
+            <Separator orientation="VERTICAL" prefHeight="200.0" />
+         </items>
+      </ToolBar>
+    </children>
+</VBox>
