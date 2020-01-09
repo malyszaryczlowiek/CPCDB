@@ -114,6 +114,8 @@ public class MainStageController implements Initializable,
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
 
+    private boolean useCurrentStatus = false;
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -131,7 +133,7 @@ public class MainStageController implements Initializable,
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
             progressValue.addListener(
-                    (observable, oldValue, newValue) -> progressBar.setProgress((double) newValue) );
+                    (observable, oldValue, newValue) -> System.out.println((double) newValue)/* progressBar.setProgress((double) newValue)*/ );
             currentStatusManager = new CurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
@@ -153,14 +155,18 @@ public class MainStageController implements Initializable,
                 protected Void call() {
                     try (Connection connection = ConnectionManager.connectToDb()) {
                         if (connection != null && errorConnectionToRemoteDB) {
-                            progressValue.set(0.0);
-                            currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            if (useCurrentStatus) {
+                                progressValue.setValue(0.0);
+                                currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            }
                         } else if (connection != null )
                             loadTable(connection);
                         else {
-                            errorConnectionToAllDBs = true;
-                            progressValue.setValue(0.0);
-                            currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            if (useCurrentStatus) {
+                                errorConnectionToAllDBs = true;
+                                progressValue.setValue(0.0);
+                                currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            }
                         }
                     }
                     catch (SQLException e) {
@@ -250,8 +256,11 @@ public class MainStageController implements Initializable,
                             deleteSelectedCompoundsContext.setDisable(true);
                     });
         }
-        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-            progressValue.setValue( progressValue.get() + 0.2);
+
+        if (useCurrentStatus) {
+            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                progressValue.setValue( progressValue.get() + 0.2);
+            }
         }
         initializationTimer.stopTimer("initializing process completed");
     }
@@ -527,7 +536,9 @@ public class MainStageController implements Initializable,
      * ###############################################
      */
     private void loadTable(Connection connection) {
-        currentStatusManager.setCurrentStatus("Connecting to Database");
+        if (useCurrentStatus) {
+            currentStatusManager.setCurrentStatus("Connecting to Database");
+        }
         final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
         int size = 0;
         try {
@@ -541,14 +552,19 @@ public class MainStageController implements Initializable,
         final String loadDBSQLQuery = "SELECT * FROM compounds";
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) { // todo ten lock można zamienić na currentStatusManager
-                progressValue.setValue( progressValue.get() + 0.1);
+
+            if (useCurrentStatus) {
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressValue.setValue( progressValue.get() + 0.1);
+                }
+                currentStatusManager.setCurrentStatus("Downloading data from server");
             }
-            currentStatusManager.setCurrentStatus("Downloading data from server");
             ResultSet resultSet = loadDBStatement.executeQuery();
-            currentStatusManager.setCurrentStatus("Loading downloaded data");
+            if (useCurrentStatus) {
+                currentStatusManager.setCurrentStatus("Loading downloaded data");
+            }
             int index = 0;
-            while(resultSet.next()) { // todo tutaj trzeba coś poprawić bo czasami wywala null pointer EXception tzn w while() bo wyjątek jest wywalany cyklicznie
+            while(resultSet.next()) {
                 int id = resultSet.getInt(1);
                 String smiles = resultSet.getString(2);
                 String compoundName = resultSet.getString(3);
@@ -568,17 +584,21 @@ public class MainStageController implements Initializable,
                 compound.setSavedInDatabase(true);
                 fullListOfCompounds.add(compound);
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(0);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100) ;
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
+                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
+                if (useCurrentStatus) {
+                    synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                        progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
+                    }
+                    currentStatusManager.setCurrentStatus("Loaded " + loadedPercentage + "%");
                 }
-                currentStatusManager.setCurrentStatus("Loaded " + loadedPercentage + "%");
             }
-            currentStatusManager.setCurrentStatus("Refreshing table");
+            if (useCurrentStatus) {
+                currentStatusManager.setCurrentStatus("Refreshing table");
+            }
             observableList.setAll(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
             mainSceneTableView.refresh(); // to zabiera około 0.6s
@@ -587,9 +607,11 @@ public class MainStageController implements Initializable,
             e.printStackTrace();
 
         }
-        currentStatusManager.setCurrentStatus("Data loaded, table refreshed");
-        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-            progressValue.setValue(0.0);
+        if (useCurrentStatus) {
+            currentStatusManager.setCurrentStatus("Data loaded, table refreshed");
+            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                progressValue.setValue(0.0);
+            }
         }
         demonTimer.stopTimer("stopping demon timer");
     }
@@ -695,11 +717,6 @@ public class MainStageController implements Initializable,
         }
         closeTimer.stopTimer("closing time when must save data to DB");
         Platform.exit();
-        /* TODO jak zrobić aby apka zamykała sie szybciej
-        wprierdolic to wszystko w dwa watki
-        wystartowac te watki jako demony
-        umiescic Platform.exit(); w watku zapisujacym dane do bazy danych.hh
-         */
     }
 
     @Override
@@ -745,7 +762,7 @@ public class MainStageController implements Initializable,
                 toUnblock = true;
             else {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
-                System.out.println("Notify called");
+                System.out.println("Notify called in task 1");
             }
         }
     }
@@ -758,8 +775,10 @@ public class MainStageController implements Initializable,
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!toUnblock)
                 toUnblock = true;
-            else
-                lockProvider.getLock(LockTypes.INITIALIZATION_END).notify();
+            else {
+                lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
+                System.out.println("Notify called in task 2");
+            }
         }
     }
 
@@ -805,10 +824,10 @@ public class MainStageController implements Initializable,
                         workerStateEvent -> {
                             connectionService.cancel();
 
-                            // TODO tutaj zaimplementować jak uda się odzystkać połączenie do zdalnego serwera.
+                            //  tutaj zaimplementować jak uda się odzystkać połączenie do zdalnego serwera.
                             // najpierw zapytać czy wszystkie dane są zapisane a następnie czy
                             /*
-                    // todo naprawić i zaimplementować
+                    // naprawić i zaimplementować
                     askWhetherMergeDataWith DB;
 
                     if (yes)
@@ -830,7 +849,7 @@ public class MainStageController implements Initializable,
 
 
 /*
-    // TODO to można walnąć do column managera niech on zapisze wszystkie dane
+    //  to można walnąć do column managera niech on zapisze wszystkie dane
     private void saveTableViewsColumnSizesAndOrder() {
         Task<Void> task1 = new Task<>()
         {

@@ -1,0 +1,10 @@
+# Default ignored files
+/.idea
+/.gradle
+/build
+/gradle
+keyStore.jks
+loginInfo
+propertiesFile
+SystemDiagram.dia
+
