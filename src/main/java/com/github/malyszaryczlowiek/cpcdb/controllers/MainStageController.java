@@ -116,7 +116,6 @@ public class MainStageController implements Initializable,
 
     private boolean useCurrentStatus = false;
 
-
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializationTimer = new LaunchTimer();
@@ -132,8 +131,11 @@ public class MainStageController implements Initializable,
 
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
+            /*
             progressValue.addListener(
-                    (observable, oldValue, newValue) -> System.out.println((double) newValue)/* progressBar.setProgress((double) newValue)*/ );
+                    (observable, oldValue, newValue) -> System.out.println((double) newValue) );
+                    //  progressBar.setProgress((double) newValue)
+             */
             currentStatusManager = new CurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
@@ -174,7 +176,91 @@ public class MainStageController implements Initializable,
                     }
                     return null;
                 }
+
+                /*
+                 * ###############################################
+                 * METHODS TO LOAD CONTENT OF TABLE
+                 * ###############################################
+                 */
+                private void loadTable(Connection connection) {
+                    updateMessage("Connecting to Database");
+                    final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
+                    int size = 0;
+                    try {
+                        PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
+                        ResultSet resultSet = loadDBStatement.executeQuery();
+                        while (resultSet.next())
+                            size = resultSet.getInt(1); // getting number of rows
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    final String loadDBSQLQuery = "SELECT * FROM compounds";
+                    try {
+                        PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
+                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                            progressValue.setValue( progressValue.get() + 0.1);
+                        }
+                        updateMessage("Downloading data from server");
+                        ResultSet resultSet = loadDBStatement.executeQuery();
+                        updateMessage("Loading downloaded data");
+                        int index = 0;
+                        while(resultSet.next()) {
+                            int id = resultSet.getInt(1);
+                            String smiles = resultSet.getString(2);
+                            String compoundName = resultSet.getString(3);
+                            float amount = resultSet.getFloat(4);
+                            String unit = resultSet.getString(5);
+                            String form = resultSet.getString(6);
+                            String tempStability = resultSet.getString(7);
+                            boolean argon = resultSet.getBoolean(8);
+                            String container = resultSet.getString(9);
+                            String storagePlace = resultSet.getString(10);
+                            LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
+                            String additionalInformation = resultSet.getString(12);
+                            Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
+                                    form, TempStability.stringToEnum(tempStability), argon, container,
+                                    storagePlace, dateTimeModification, additionalInformation);
+                            compound.setId(id);
+                            compound.setSavedInDatabase(true);
+                            fullListOfCompounds.add(compound); // todo sprawdzić czy to nie wymaga lockowania tzn. czy wywołanie
+                            // fullList of compounds
+                            try {
+                                Thread.sleep(0);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
+                            }
+                            if (index % 100 == 0) {
+                                updateMessage("Loaded " + loadedPercentage + "%");
+                            }
+                        }
+                        updateMessage("Refreshing table");
+                        observableList.setAll(fullListOfCompounds);
+                        mainSceneTableView.setItems(observableList);
+                        mainSceneTableView.refresh(); // to zabiera około 0.6s
+                    }
+                    catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    updateMessage("Data loaded, table refreshed");
+                    synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                        progressValue.setValue(0.0);
+                    }
+                    demonTimer.stopTimer("stopping demon timer");
+                }
             };
+
+            loadingDatabaseTask.messageProperty().addListener(
+                    (observableValue, s, t1) -> {
+                        currentStatusManager.setCurrentStatus(t1);
+                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                            progressBar.setProgress(progressValue.doubleValue());
+                        }
+                    }
+            );
 
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
@@ -530,91 +616,7 @@ public class MainStageController implements Initializable,
     }
 
 
-    /*
-     * ###############################################
-     * METHODS TO LOAD CONTENT OF TABLE
-     * ###############################################
-     */
-    private void loadTable(Connection connection) {
-        if (useCurrentStatus) {
-            currentStatusManager.setCurrentStatus("Connecting to Database");
-        }
-        final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
-        int size = 0;
-        try {
-            PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
-            ResultSet resultSet = loadDBStatement.executeQuery();
-            while (resultSet.next())
-                size = resultSet.getInt(1); // getting number of rows
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        final String loadDBSQLQuery = "SELECT * FROM compounds";
-        try {
-            PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
 
-            if (useCurrentStatus) {
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressValue.setValue( progressValue.get() + 0.1);
-                }
-                currentStatusManager.setCurrentStatus("Downloading data from server");
-            }
-            ResultSet resultSet = loadDBStatement.executeQuery();
-            if (useCurrentStatus) {
-                currentStatusManager.setCurrentStatus("Loading downloaded data");
-            }
-            int index = 0;
-            while(resultSet.next()) {
-                int id = resultSet.getInt(1);
-                String smiles = resultSet.getString(2);
-                String compoundName = resultSet.getString(3);
-                float amount = resultSet.getFloat(4);
-                String unit = resultSet.getString(5);
-                String form = resultSet.getString(6);
-                String tempStability = resultSet.getString(7);
-                boolean argon = resultSet.getBoolean(8);
-                String container = resultSet.getString(9);
-                String storagePlace = resultSet.getString(10);
-                LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
-                String additionalInformation = resultSet.getString(12);
-                Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
-                        form, TempStability.stringToEnum(tempStability), argon, container,
-                        storagePlace, dateTimeModification, additionalInformation);
-                compound.setId(id);
-                compound.setSavedInDatabase(true);
-                fullListOfCompounds.add(compound);
-                try {
-                    Thread.sleep(0);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
-                if (useCurrentStatus) {
-                    synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                        progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
-                    }
-                    currentStatusManager.setCurrentStatus("Loaded " + loadedPercentage + "%");
-                }
-            }
-            if (useCurrentStatus) {
-                currentStatusManager.setCurrentStatus("Refreshing table");
-            }
-            observableList.setAll(fullListOfCompounds);
-            mainSceneTableView.setItems(observableList);
-            mainSceneTableView.refresh(); // to zabiera około 0.6s
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
-
-        }
-        if (useCurrentStatus) {
-            currentStatusManager.setCurrentStatus("Data loaded, table refreshed");
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                progressValue.setValue(0.0);
-            }
-        }
-        demonTimer.stopTimer("stopping demon timer");
-    }
 
     @FXML
     protected void reloadTable() {
