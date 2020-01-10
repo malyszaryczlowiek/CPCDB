@@ -36,7 +36,6 @@
                         <MenuItem fx:id="menuEditRedo" mnemonicParsing="false" onAction="#onRedoClicked" text="Redo" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem mnemonicParsing="false" onAction="#onMenuEditSelectAll" text="Select All" />
-                        <MenuItem fx:id="onMenuEditUnSelectAll" mnemonicParsing="false" text="Unselect All" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="menuEditSelectedCompound" mnemonicParsing="false" onAction="#showEditCompoundStage" text="Edit Selected Compound" />
                   <MenuItem fx:id="menuEditDeleteSelectedCompounds" mnemonicParsing="false" onAction="#deleteSelectedCompounds" text="Delete Selected Compound(s)" />

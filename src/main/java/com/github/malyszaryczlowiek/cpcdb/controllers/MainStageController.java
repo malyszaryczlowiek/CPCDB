@@ -106,7 +106,6 @@ public class MainStageController implements Initializable,
     private ColumnManager columnManager;
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
-    private int[] selectedIndexes;
     private LaunchTimer initializationTimer;
     private LaunchTimer demonTimer;
     private static boolean errorConnectionToRemoteDB = false;
@@ -131,11 +130,6 @@ public class MainStageController implements Initializable,
 
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
-            /*
-            progressValue.addListener(
-                    (observable, oldValue, newValue) -> System.out.println((double) newValue) );
-                    //  progressBar.setProgress((double) newValue)
-             */
             currentStatusManager = new CurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
@@ -156,16 +150,15 @@ public class MainStageController implements Initializable,
                 @Override
                 protected Void call() {
                     try (Connection connection = ConnectionManager.connectToDb()) {
-                        if (connection != null && errorConnectionToRemoteDB) {
-                            if (useCurrentStatus) {
-                                progressValue.setValue(0.0);
-                                currentStatusManager.setErrorMessage("Error (click here form more information)");
-                            }
-                        } else if (connection != null )
+                        if (connection != null && errorConnectionToRemoteDB)
+                            updateMessage("Error (click here for more information)");
+                        else if (connection != null )
                             loadTable(connection);
                         else {
+                            errorConnectionToAllDBs = true;
+                            updateMessage("Error (click here for more information)");
                             if (useCurrentStatus) {
-                                errorConnectionToAllDBs = true;
+
                                 progressValue.setValue(0.0);
                                 currentStatusManager.setErrorMessage("Error (click here form more information)");
                             }
@@ -255,9 +248,18 @@ public class MainStageController implements Initializable,
 
             loadingDatabaseTask.messageProperty().addListener(
                     (observableValue, s, t1) -> {
-                        currentStatusManager.setCurrentStatus(t1);
-                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                            progressBar.setProgress(progressValue.doubleValue());
+                        if (t1.equals("Error (click here for more information)")) {
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressBar.setProgress(0.0);
+                            }
+                            currentStatusManager.setErrorMessage("Error (click here for more information)");
+                        }
+                        else
+                        {
+                            currentStatusManager.setCurrentStatus(t1);
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressBar.setProgress(progressValue.doubleValue());
+                            }
                         }
                     }
             );
@@ -342,11 +344,8 @@ public class MainStageController implements Initializable,
                             deleteSelectedCompoundsContext.setDisable(true);
                     });
         }
-
-        if (useCurrentStatus) {
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                progressValue.setValue( progressValue.get() + 0.2);
-            }
+        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+            progressValue.setValue( progressValue.get() + 0.2);
         }
         initializationTimer.stopTimer("initializing process completed");
     }
@@ -485,32 +484,38 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onMenuEditSelectAll() {
+        mainSceneTableView.getSelectionModel().selectAll();
+        /*
         ObservableList<Integer> lastSelectedCompounds = mainSceneTableView.getSelectionModel().getSelectedIndices();
         int size = lastSelectedCompounds.size();
-        selectedIndexes = new int[size];
+        int[] selectedIndexes = new int[size];
         int i = 0;
         for (int index: lastSelectedCompounds) {
             System.out.println("index: " + index);
             selectedIndexes[i++] = index;
         }
-        mainSceneTableView.getSelectionModel().selectAll();
+         */
     }
 
+    /*
     @FXML
     protected void onMenuEditUnSelectAll() {
         /*
         //int first = selectedIndexes[0];
         //int[] newIndexes = Arrays.copyOfRange(selectedIndexes,1, selectedIndexes.length);
         //for (int selectedIndex : selectedIndexes) mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex);
-        */
-        //mainSceneTableView.getSelectionModel().select(0);
+
+    //mainSceneTableView.getSelectionModel().select(0);
         mainSceneTableView.getSelectionModel().clearSelection();
         mainSceneTableView.refresh();
         Arrays.stream(selectedIndexes).forEach(selectedIndex -> mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex));
         mainSceneTableView.getSelectionModel().clearSelection();
-        //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
-    }
+    //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
+}
+*/
+
+
 
     private void executeUndoRedo(Map<Integer, Compound> mapOfCompoundsToChangeInTableView, ActionType actionType) {
         if ( actionType.equals( ActionType.REMOVE ) ) {

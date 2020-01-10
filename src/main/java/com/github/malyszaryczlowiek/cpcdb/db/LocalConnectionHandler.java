@@ -1,7 +1,8 @@
 package com.github.malyszaryczlowiek.cpcdb.db;
 
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
-
+import com.mysql.cj.exceptions.CJCommunicationsException;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 import java.sql.*;
 
 public class LocalConnectionHandler implements ConnectionHandler
@@ -20,14 +21,14 @@ public class LocalConnectionHandler implements ConnectionHandler
                 new DatabaseAndTableCreator(CONNECTION, DBNAME, DatabaseLocation.LOCAL);
             return CONNECTION;
         }
-        catch (com.mysql.cj.jdbc.exceptions.CommunicationsException e) {
+        catch (CJCommunicationsException | CommunicationsException e) {
             e.printStackTrace();
-            System.out.println("jestem w localCOnnectionHandler w pierwszym catchu.");
+            System.out.println("jestem w LocalConnectionHandler w pierwszym catchu.");
             return new NoConnectionHandler().connect();
         }
         catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            return new NoConnectionHandler().connect();
         }
     }
 }
