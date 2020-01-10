@@ -2,6 +2,7 @@ package com.github.malyszaryczlowiek.cpcdb.db;
 
 import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
+
 import com.mysql.cj.exceptions.CJCommunicationsException;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
@@ -24,7 +25,13 @@ class RemoteConnectionHandler implements ConnectionHandler
             return CONNECTION;
         }
         catch (CJCommunicationsException | CommunicationsException e) {
-            e.printStackTrace();
+            System.out.println("Message:\n" + e.getMessage());
+            /* to jest wiadomość gdy nie ma połączenia z interetem
+            Communications link failure
+
+The last packet sent successfully to the server was 0 milliseconds ago. The driver has not received any packets from the server.
+             */
+            //e.printStackTrace();
             MainStageController.setErrorConnectionToRemoteDBToTrue();
             return new LocalConnectionHandler().connect();
         } catch (SQLException e) {

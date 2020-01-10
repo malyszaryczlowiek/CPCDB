@@ -106,7 +106,6 @@ public class MainStageController implements Initializable,
     private ColumnManager columnManager;
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
-    private int[] selectedIndexes;
     private LaunchTimer initializationTimer;
     private LaunchTimer demonTimer;
     private static boolean errorConnectionToRemoteDB = false;
@@ -114,6 +113,7 @@ public class MainStageController implements Initializable,
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
 
+    private boolean useCurrentStatus = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -130,8 +130,6 @@ public class MainStageController implements Initializable,
 
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
-            progressValue.addListener(
-                    (observable, oldValue, newValue) -> progressBar.setProgress((double) newValue) );
             currentStatusManager = new CurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
@@ -152,15 +150,18 @@ public class MainStageController implements Initializable,
                 @Override
                 protected Void call() {
                     try (Connection connection = ConnectionManager.connectToDb()) {
-                        if (connection != null && errorConnectionToRemoteDB) {
-                            progressValue.set(0.0);
-                            currentStatusManager.setErrorMessage("Error (click here form more information)");
-                        } else if (connection != null )
+                        if (connection != null && errorConnectionToRemoteDB)
+                            updateMessage("Error (click here for more information)");
+                        else if (connection != null )
                             loadTable(connection);
                         else {
                             errorConnectionToAllDBs = true;
-                            progressValue.setValue(0.0);
-                            currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            updateMessage("Error (click here for more information)");
+                            if (useCurrentStatus) {
+
+                                progressValue.setValue(0.0);
+                                currentStatusManager.setErrorMessage("Error (click here form more information)");
+                            }
                         }
                     }
                     catch (SQLException e) {
@@ -168,7 +169,100 @@ public class MainStageController implements Initializable,
                     }
                     return null;
                 }
+
+                /*
+                 * ###############################################
+                 * METHODS TO LOAD CONTENT OF TABLE
+                 * ###############################################
+                 */
+                private void loadTable(Connection connection) {
+                    updateMessage("Connecting to Database");
+                    final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
+                    int size = 0;
+                    try {
+                        PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
+                        ResultSet resultSet = loadDBStatement.executeQuery();
+                        while (resultSet.next())
+                            size = resultSet.getInt(1); // getting number of rows
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    final String loadDBSQLQuery = "SELECT * FROM compounds";
+                    try {
+                        PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
+                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                            progressValue.setValue( progressValue.get() + 0.1);
+                        }
+                        updateMessage("Downloading data from server");
+                        ResultSet resultSet = loadDBStatement.executeQuery();
+                        updateMessage("Loading downloaded data");
+                        int index = 0;
+                        while(resultSet.next()) {
+                            int id = resultSet.getInt(1);
+                            String smiles = resultSet.getString(2);
+                            String compoundName = resultSet.getString(3);
+                            float amount = resultSet.getFloat(4);
+                            String unit = resultSet.getString(5);
+                            String form = resultSet.getString(6);
+                            String tempStability = resultSet.getString(7);
+                            boolean argon = resultSet.getBoolean(8);
+                            String container = resultSet.getString(9);
+                            String storagePlace = resultSet.getString(10);
+                            LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
+                            String additionalInformation = resultSet.getString(12);
+                            Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
+                                    form, TempStability.stringToEnum(tempStability), argon, container,
+                                    storagePlace, dateTimeModification, additionalInformation);
+                            compound.setId(id);
+                            compound.setSavedInDatabase(true);
+                            fullListOfCompounds.add(compound); // todo sprawdzić czy to nie wymaga lockowania tzn. czy wywołanie
+                            // fullList of compounds
+                            try {
+                                Thread.sleep(0);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
+                            }
+                            if (index % 100 == 0) {
+                                updateMessage("Loaded " + loadedPercentage + "%");
+                            }
+                        }
+                        updateMessage("Refreshing table");
+                        observableList.setAll(fullListOfCompounds);
+                        mainSceneTableView.setItems(observableList);
+                        mainSceneTableView.refresh(); // to zabiera około 0.6s
+                    }
+                    catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    updateMessage("Data loaded, table refreshed");
+                    synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                        progressValue.setValue(0.0);
+                    }
+                    demonTimer.stopTimer("stopping demon timer");
+                }
             };
+
+            loadingDatabaseTask.messageProperty().addListener(
+                    (observableValue, s, t1) -> {
+                        if (t1.equals("Error (click here for more information)")) {
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressBar.setProgress(0.0);
+                            }
+                            currentStatusManager.setErrorMessage("Error (click here for more information)");
+                        }
+                        else
+                        {
+                            currentStatusManager.setCurrentStatus(t1);
+                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                progressBar.setProgress(progressValue.doubleValue());
+                            }
+                        }
+                    }
+            );
 
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
@@ -390,32 +484,38 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onMenuEditSelectAll() {
+        mainSceneTableView.getSelectionModel().selectAll();
+        /*
         ObservableList<Integer> lastSelectedCompounds = mainSceneTableView.getSelectionModel().getSelectedIndices();
         int size = lastSelectedCompounds.size();
-        selectedIndexes = new int[size];
+        int[] selectedIndexes = new int[size];
         int i = 0;
         for (int index: lastSelectedCompounds) {
             System.out.println("index: " + index);
             selectedIndexes[i++] = index;
         }
-        mainSceneTableView.getSelectionModel().selectAll();
+         */
     }
 
+    /*
     @FXML
     protected void onMenuEditUnSelectAll() {
         /*
         //int first = selectedIndexes[0];
         //int[] newIndexes = Arrays.copyOfRange(selectedIndexes,1, selectedIndexes.length);
         //for (int selectedIndex : selectedIndexes) mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex);
-        */
-        //mainSceneTableView.getSelectionModel().select(0);
+
+    //mainSceneTableView.getSelectionModel().select(0);
         mainSceneTableView.getSelectionModel().clearSelection();
         mainSceneTableView.refresh();
         Arrays.stream(selectedIndexes).forEach(selectedIndex -> mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex));
         mainSceneTableView.getSelectionModel().clearSelection();
-        //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
-    }
+    //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
+}
+*/
+
+
 
     private void executeUndoRedo(Map<Integer, Compound> mapOfCompoundsToChangeInTableView, ActionType actionType) {
         if ( actionType.equals( ActionType.REMOVE ) ) {
@@ -521,78 +621,7 @@ public class MainStageController implements Initializable,
     }
 
 
-    /*
-     * ###############################################
-     * METHODS TO LOAD CONTENT OF TABLE
-     * ###############################################
-     */
-    private void loadTable(Connection connection) {
-        currentStatusManager.setCurrentStatus("Connecting to Database");
-        final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
-        int size = 0;
-        try {
-            PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
-            ResultSet resultSet = loadDBStatement.executeQuery();
-            while (resultSet.next())
-                size = resultSet.getInt(1); // getting number of rows
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        final String loadDBSQLQuery = "SELECT * FROM compounds";
-        try {
-            PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) { // todo ten lock można zamienić na currentStatusManager
-                progressValue.setValue( progressValue.get() + 0.1);
-            }
-            currentStatusManager.setCurrentStatus("Downloading data from server");
-            ResultSet resultSet = loadDBStatement.executeQuery();
-            currentStatusManager.setCurrentStatus("Loading downloaded data");
-            int index = 0;
-            while(resultSet.next()) { // todo tutaj trzeba coś poprawić bo czasami wywala null pointer EXception tzn w while() bo wyjątek jest wywalany cyklicznie
-                int id = resultSet.getInt(1);
-                String smiles = resultSet.getString(2);
-                String compoundName = resultSet.getString(3);
-                float amount = resultSet.getFloat(4);
-                String unit = resultSet.getString(5);
-                String form = resultSet.getString(6);
-                String tempStability = resultSet.getString(7);
-                boolean argon = resultSet.getBoolean(8);
-                String container = resultSet.getString(9);
-                String storagePlace = resultSet.getString(10);
-                LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
-                String additionalInformation = resultSet.getString(12);
-                Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
-                        form, TempStability.stringToEnum(tempStability), argon, container,
-                        storagePlace, dateTimeModification, additionalInformation);
-                compound.setId(id);
-                compound.setSavedInDatabase(true);
-                fullListOfCompounds.add(compound);
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100) ;
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
-                }
-                currentStatusManager.setCurrentStatus("Loaded " + loadedPercentage + "%");
-            }
-            currentStatusManager.setCurrentStatus("Refreshing table");
-            observableList.setAll(fullListOfCompounds);
-            mainSceneTableView.setItems(observableList);
-            mainSceneTableView.refresh(); // to zabiera około 0.6s
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
 
-        }
-        currentStatusManager.setCurrentStatus("Data loaded, table refreshed");
-        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-            progressValue.setValue(0.0);
-        }
-        demonTimer.stopTimer("stopping demon timer");
-    }
 
     @FXML
     protected void reloadTable() {
@@ -695,11 +724,6 @@ public class MainStageController implements Initializable,
         }
         closeTimer.stopTimer("closing time when must save data to DB");
         Platform.exit();
-        /* TODO jak zrobić aby apka zamykała sie szybciej
-        wprierdolic to wszystko w dwa watki
-        wystartowac te watki jako demony
-        umiescic Platform.exit(); w watku zapisujacym dane do bazy danych.hh
-         */
     }
 
     @Override
@@ -745,7 +769,7 @@ public class MainStageController implements Initializable,
                 toUnblock = true;
             else {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
-                System.out.println("Notify called");
+                System.out.println("Notify called in task 1");
             }
         }
     }
@@ -758,8 +782,10 @@ public class MainStageController implements Initializable,
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!toUnblock)
                 toUnblock = true;
-            else
-                lockProvider.getLock(LockTypes.INITIALIZATION_END).notify();
+            else {
+                lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
+                System.out.println("Notify called in task 2");
+            }
         }
     }
 
@@ -805,10 +831,10 @@ public class MainStageController implements Initializable,
                         workerStateEvent -> {
                             connectionService.cancel();
 
-                            // TODO tutaj zaimplementować jak uda się odzystkać połączenie do zdalnego serwera.
+                            //  tutaj zaimplementować jak uda się odzystkać połączenie do zdalnego serwera.
                             // najpierw zapytać czy wszystkie dane są zapisane a następnie czy
                             /*
-                    // todo naprawić i zaimplementować
+                    // naprawić i zaimplementować
                     askWhetherMergeDataWith DB;
 
                     if (yes)
@@ -830,7 +856,7 @@ public class MainStageController implements Initializable,
 
 
 /*
-    // TODO to można walnąć do column managera niech on zapisze wszystkie dane
+    //  to można walnąć do column managera niech on zapisze wszystkie dane
     private void saveTableViewsColumnSizesAndOrder() {
         Task<Void> task1 = new Task<>()
         {
