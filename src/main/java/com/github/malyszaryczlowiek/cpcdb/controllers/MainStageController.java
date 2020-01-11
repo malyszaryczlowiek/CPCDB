@@ -113,7 +113,6 @@ public class MainStageController implements Initializable,
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
 
-    private boolean useCurrentStatus = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -157,11 +156,6 @@ public class MainStageController implements Initializable,
                         else {
                             errorConnectionToAllDBs = true;
                             updateMessage("Error (click here for more information)");
-                            if (useCurrentStatus) {
-
-                                progressValue.setValue(0.0);
-                                currentStatusManager.setErrorMessage("Error (click here form more information)");
-                            }
                         }
                     }
                     catch (SQLException e) {
@@ -215,8 +209,7 @@ public class MainStageController implements Initializable,
                                     storagePlace, dateTimeModification, additionalInformation);
                             compound.setId(id);
                             compound.setSavedInDatabase(true);
-                            fullListOfCompounds.add(compound); // todo sprawdzić czy to nie wymaga lockowania tzn. czy wywołanie
-                            // fullList of compounds
+                            fullListOfCompounds.add(compound);
                             try {
                                 Thread.sleep(0);
                             } catch (InterruptedException e) {
@@ -226,9 +219,8 @@ public class MainStageController implements Initializable,
                             synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                 progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
                             }
-                            if (index % 100 == 0) {
+                            if (index % 100 == 0)
                                 updateMessage("Loaded " + loadedPercentage + "%");
-                            }
                         }
                         updateMessage("Refreshing table");
                         observableList.setAll(fullListOfCompounds);
@@ -238,10 +230,10 @@ public class MainStageController implements Initializable,
                     catch (SQLException e) {
                         e.printStackTrace();
                     }
-                    updateMessage("Data loaded, table refreshed");
                     synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                         progressValue.setValue(0.0);
                     }
+                    updateMessage("Data loaded, table refreshed");
                     demonTimer.stopTimer("stopping demon timer");
                 }
             };
@@ -345,7 +337,7 @@ public class MainStageController implements Initializable,
                     });
         }
         synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-            progressValue.setValue( progressValue.get() + 0.2);
+            progressValue.setValue( progressValue.get() + 0.3);
         }
         initializationTimer.stopTimer("initializing process completed");
     }
@@ -682,7 +674,6 @@ public class MainStageController implements Initializable,
     @Override
     public void onSaveChangesAndCloseProgram() {
         LaunchTimer closeTimer = new LaunchTimer();
-
         Task<Void> task1 = new Task<>()
         {
             @Override
@@ -690,12 +681,10 @@ public class MainStageController implements Initializable,
             {
                 LaunchTimer saveTimer = new LaunchTimer();
                 changesDetector.saveChangesToDatabase();
-                //Platform.exit();
                 saveTimer.stopTimer("Save Timer is stopped");
                 return null;
             }
         };
-
         Task<Void> task2 = new Task<>()
         {
             @Override
@@ -710,14 +699,14 @@ public class MainStageController implements Initializable,
         Thread thread1 = new Thread(task1);
         Thread thread2 = new Thread(task2);
 
-        thread1.setDaemon(true);
+        //thread1.setDaemon(true);
 
         thread1.start();
         thread2.start();
 
         try {
             thread2.join();
-            //thread1.join();
+            thread1.join();
         }
         catch (InterruptedException e) {
             e.printStackTrace();
