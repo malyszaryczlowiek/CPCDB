@@ -9,7 +9,12 @@ public class ConnectionManager
         return handler.connect();
     }
 }
-
+/*
+sudo service mysql status
+sudo service mysql stop
+sudo service mysql status
+sudo service mysql restart
+ */
 
 
 /*
@@ -24,5 +29,4 @@ useCPCDBSqlQuery.execute();
 
 better use:
 CONNECTION.setCatalog( DBNAME );
-
  */

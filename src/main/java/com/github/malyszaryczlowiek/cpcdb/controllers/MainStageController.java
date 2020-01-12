@@ -1,5 +1,7 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
+import com.github.malyszaryczlowiek.cpcdb.alertWindows.*;
+import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ChangesDetector;
 import com.github.malyszaryczlowiek.cpcdb.initializers.*;
@@ -13,9 +15,6 @@ import com.github.malyszaryczlowiek.cpcdb.util.CloseProgramNotifier;
 import com.github.malyszaryczlowiek.cpcdb.helperClasses.LaunchTimer;
 import com.github.malyszaryczlowiek.cpcdb.util.SearchEngine;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
-import com.github.malyszaryczlowiek.cpcdb.alerts.FatalDbConnectionError;
-import com.github.malyszaryczlowiek.cpcdb.alerts.NoFoundCompound;
-import com.github.malyszaryczlowiek.cpcdb.alerts.RemoteServerConnectionError;
 import com.github.malyszaryczlowiek.cpcdb.windowLoaders.*;
 
 import javafx.application.Platform;
@@ -101,15 +100,15 @@ public class MainStageController implements Initializable,
     @FXML private Text currentStatus;
     private DoubleProperty progressValue;
 
-    private boolean toUnblock = false;
+    private boolean toUnblock = false; //TODO rename zmienić nazwę tak aby mówiła, że blokujemy dwa wątki
+    // i zwalniamy ich locki tak aby trzeci wątek dokończył swoją pracę i notyficował pozostałe
     private ChangesDetector changesDetector;
     private ColumnManager columnManager;
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
     private LaunchTimer demonTimer;
-    private static boolean errorConnectionToRemoteDB = false;
-    private boolean errorConnectionToAllDBs = false;
+
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
 
@@ -141,6 +140,7 @@ public class MainStageController implements Initializable,
                     smilesCol, compoundNumCol, amountCol, unitCol, formCol, tempStabilityCol,
                     argonCol, containerCol, storagePlaceCol, lastModificationCol, additionalInfoCol);
             ColumnInitializer.setUpInitializer(mainSceneTableView, changesDetector);
+            ErrorFlagsManager.initializeErrorFlagsManager();
             if ( !SecureProperties.hasProperty("column.width.Smiles") )
                 setWidthOfColumns();
             demonTimer = new LaunchTimer();
@@ -149,14 +149,43 @@ public class MainStageController implements Initializable,
                 @Override
                 protected Void call() {
                     try (Connection connection = ConnectionManager.connectToDb()) {
-                        if (connection != null && errorConnectionToRemoteDB)
-                            updateMessage("Error (click here for more information)");
-                        else if (connection != null )
+                        // not working on any copy
+                        if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                            updateMessage("cannotConnectToAllDB");
+                        // not working on any copy
+                        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                            updateMessage("cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase");
+                        // working on local copy
+                        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
+                                && connection != null ) {
+                            updateMessage("cannotConnectToRemoteDB");
                             loadTable(connection);
-                        else {
-                            errorConnectionToAllDBs = true;
-                            updateMessage("Error (click here for more information)");
                         }
+                        // not working on any copy
+                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                            updateMessage("incorrectRemotePassphraseAndCannotConnectToLocalDatabase");
+                        // not working on any copy
+                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                            updateMessage("incorrectRemoteAndLocalPassphrase");
+                            // working on local copy
+                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
+                                && connection != null) {
+                            updateMessage("incorrectRemotePassphrase");
+                            loadTable(connection);
+                        } // all working ok
+                        else if (connection != null //)
+                                && ErrorFlagsManager.getMapOfErrors().values().stream().noneMatch(value -> value) )
+                            loadTable(connection);
+                        else
+                            updateMessage("UnknownErrorOccurred");
                     }
                     catch (SQLException e) {
                         e.printStackTrace();
@@ -225,7 +254,6 @@ public class MainStageController implements Initializable,
                         updateMessage("Refreshing table");
                         observableList.setAll(fullListOfCompounds);
                         mainSceneTableView.setItems(observableList);
-                        mainSceneTableView.refresh(); // to zabiera około 0.6s
                     }
                     catch (SQLException e) {
                         e.printStackTrace();
@@ -233,25 +261,82 @@ public class MainStageController implements Initializable,
                     synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                         progressValue.setValue(0.0);
                     }
-                    updateMessage("Data loaded, table refreshed");
+                    boolean showWarning = ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                            && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                            && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                            ||
+                            ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
+                    if ( showWarning )
+                        updateMessage("showWarning");
+                    else
+                        updateMessage("Data loaded, table refreshed");
                     demonTimer.stopTimer("stopping demon timer");
                 }
             };
 
             loadingDatabaseTask.messageProperty().addListener(
                     (observableValue, s, t1) -> {
-                        if (t1.equals("Error (click here for more information)")) {
-                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                progressBar.setProgress(0.0);
-                            }
-                            currentStatusManager.setErrorMessage("Error (click here for more information)");
-                        }
-                        else
-                        {
-                            currentStatusManager.setCurrentStatus(t1);
-                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                progressBar.setProgress(progressValue.doubleValue());
-                            }
+                        System.out.println("wyświelta się: " + s);
+                        switch (s) {
+                            case "cannotConnectToAllDB":
+                                new FatalDbConnectionError(Alert.AlertType.ERROR).show();
+                                startService();
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setErrorMessage("Error (click here for more info)");
+                                break;
+                            case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
+                                new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                                startService();
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setErrorMessage("Error (click here for more info)");
+                                break;
+                            case "cannotConnectToRemoteDB":
+                                new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+                                break;
+                            case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
+                                new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
+                                startService();
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setErrorMessage("Error (click here for more info)");
+                                break;
+                            case "incorrectRemoteAndLocalPassphrase":
+                                new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setErrorMessage("Error (click here for more info)");
+                                break;
+                            case "incorrectRemotePassphrase":
+                                new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
+                                currentStatusManager.setWarningMessage("Warning (click here for more info)");
+                                break;
+                            case "showWarning":
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setWarningMessage("Data loaded. Warning (click here for more info)");
+                                break;
+                            case "UnknownErrorOccurred":
+                                new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(0.0);
+                                }
+                                currentStatusManager.setErrorMessage("Unknown Error Occurred");
+                                break;
+                            default:  // correct data loading
+                                currentStatusManager.setCurrentStatus(s);
+                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                                    progressBar.setProgress(progressValue.doubleValue());
+                                }
+                                break;
                         }
                     }
             );
@@ -489,26 +574,6 @@ public class MainStageController implements Initializable,
          */
     }
 
-    /*
-    @FXML
-    protected void onMenuEditUnSelectAll() {
-        /*
-        //int first = selectedIndexes[0];
-        //int[] newIndexes = Arrays.copyOfRange(selectedIndexes,1, selectedIndexes.length);
-        //for (int selectedIndex : selectedIndexes) mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex);
-
-    //mainSceneTableView.getSelectionModel().select(0);
-        mainSceneTableView.getSelectionModel().clearSelection();
-        mainSceneTableView.refresh();
-        Arrays.stream(selectedIndexes).forEach(selectedIndex -> mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex));
-        mainSceneTableView.getSelectionModel().clearSelection();
-    //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
-}
-*/
-
-
-
     private void executeUndoRedo(Map<Integer, Compound> mapOfCompoundsToChangeInTableView, ActionType actionType) {
         if ( actionType.equals( ActionType.REMOVE ) ) {
             if ( mapOfCompoundsToChangeInTableView
@@ -563,11 +628,10 @@ public class MainStageController implements Initializable,
 
 
     @FXML
-    protected void showEditCompoundStage(ActionEvent event) throws IOException {
+    protected void showEditCompoundStage() throws IOException {
         Compound selectedItems = mainSceneTableView.getSelectionModel()
                 .getSelectedItems().get(0);
         new EditCompoundWindow(this,  selectedItems);
-        event.consume();
     }
 
 
@@ -609,11 +673,8 @@ public class MainStageController implements Initializable,
             mainSceneTableView.refresh();
         }
         else
-            new NoFoundCompound().show();
+            new NoFoundCompound(Alert.AlertType.INFORMATION).show();
     }
-
-
-
 
     @FXML
     protected void reloadTable() {
@@ -695,15 +756,10 @@ public class MainStageController implements Initializable,
                 return null;
             }
         };
-
         Thread thread1 = new Thread(task1);
         Thread thread2 = new Thread(task2);
-
-        //thread1.setDaemon(true);
-
         thread1.start();
         thread2.start();
-
         try {
             thread2.join();
             thread1.join();
@@ -739,10 +795,6 @@ public class MainStageController implements Initializable,
         SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( additionalInfoCol.getWidth() ));
     }
 
-
-    public static void setErrorConnectionToRemoteDBToTrue() {
-        errorConnectionToRemoteDB = true;
-    }
 
     private void settingUpTask1() {
         new SmilesColumnInitializer(smilesCol).initialize();
@@ -803,14 +855,38 @@ public class MainStageController implements Initializable,
 
     @FXML
     private void onShowErrors() {
-        if ( errorConnectionToRemoteDB && !errorConnectionToAllDBs ) {
-            new RemoteServerConnectionError().show();
-            startService();
-        }
-        if ( errorConnectionToAllDBs )
-            new FatalDbConnectionError().show();
-        currentStatusManager.resetFont();
+        if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+            new FatalDbConnectionError(Alert.AlertType.ERROR).show();
 
+
+        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+            new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+
+
+        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+            new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+
+
+        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+            new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
+
+
+        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+            new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+
+
+        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) ) {
+            new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
+        }
+        currentStatusManager.resetFont();
     }
 
     private void startService() {
@@ -840,56 +916,29 @@ public class MainStageController implements Initializable,
             });
             connectionService.start();
                  */
+
+
+
+        /*
+    @FXML
+    protected void onMenuEditUnSelectAll() {
+        /*
+        //int first = selectedIndexes[0];
+        //int[] newIndexes = Arrays.copyOfRange(selectedIndexes,1, selectedIndexes.length);
+        //for (int selectedIndex : selectedIndexes) mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex);
+
+    //mainSceneTableView.getSelectionModel().select(0);
+        mainSceneTableView.getSelectionModel().clearSelection();
+        mainSceneTableView.refresh();
+        Arrays.stream(selectedIndexes).forEach(selectedIndex -> mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex));
+        mainSceneTableView.getSelectionModel().clearSelection();
+    //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
+}
+*/
+
     }
 }
-
-
-/*
-    //  to można walnąć do column managera niech on zapisze wszystkie dane
-    private void saveTableViewsColumnSizesAndOrder() {
-        Task<Void> task1 = new Task<>()
-        {
-            @Override
-            protected Void call()
-            {
-                SecureProperties.setProperty("column.width.Smiles", String.valueOf( smilesCol.getWidth() ));
-                SecureProperties.setProperty("column.width.CompoundName", String.valueOf( compoundNumCol.getWidth() ));
-                SecureProperties.setProperty("column.width.Amount", String.valueOf( amountCol.getWidth() ));
-                SecureProperties.setProperty("column.width.Unit", String.valueOf( unitCol.getWidth() ));
-                SecureProperties.setProperty("column.width.Form", String.valueOf( formCol.getWidth() ));
-                SecureProperties.setProperty("column.width.TemperatureStability", String.valueOf( tempStabilityCol.getWidth() ));
-                return null;
-            }
-        };
-
-        Task<Void> task2 = new Task<>()
-        {
-            @Override
-            protected Void call()
-            {
-                SecureProperties.setProperty("column.width.Argon", String.valueOf( argonCol.getWidth() ));
-                SecureProperties.setProperty("column.width.Container", String.valueOf( containerCol.getWidth() ));
-                SecureProperties.setProperty("column.width.StoragePlace", String.valueOf( storagePlaceCol.getWidth() ));
-                SecureProperties.setProperty("column.width.LastModification", String.valueOf( lastModificationCol.getWidth() ));
-                SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( additionalInfoCol.getWidth() ));
-                return null;
-            }
-        };
-
-        Thread thread1 = new Thread(task1);
-        Thread thread2 = new Thread(task2);
-        thread1.start();
-        thread2.start();
-
-        try {
-            thread1.join();
-            thread2.join();
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
- */
 
 
 

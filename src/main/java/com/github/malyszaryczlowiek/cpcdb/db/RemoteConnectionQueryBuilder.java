@@ -10,7 +10,7 @@ public class RemoteConnectionQueryBuilder extends ConnectionQueryBuilder
     RemoteConnectionQueryBuilder() {
         super();
         urlBuilder = new StringBuilder("jdbc:")
-                .append(SecureProperties.getProperty("settings.db.remote.RDBMS")) // RDBMS - relational database management system
+                .append(SecureProperties.getProperty("settings.db.remote.RDBMS")) // RDBMS - relational database management system e.g. MySQL
                 .append("://")
                 .append(SecureProperties.getProperty("settings.db.remote.serverAddressIP"))
                 .append(":")

@@ -1,9 +1,11 @@
-package com.github.malyszaryczlowiek.cpcdb.alerts;
+package com.github.malyszaryczlowiek.cpcdb.alertWindows;
 
-public class NoFoundCompound extends InfoAlert
+import javafx.scene.control.Alert;
+
+public class NoFoundCompound extends AlertWindow
 {
-    public NoFoundCompound()
-    {
+    public NoFoundCompound(Alert.AlertType alertType) {
+        super(alertType);
         alert.setWidth(700);
         alert.setHeight(500);
         alert.setTitle("Information");

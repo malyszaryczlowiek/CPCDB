@@ -1,10 +1,11 @@
 package com.github.malyszaryczlowiek.cpcdb.initializers;
 
-import com.github.malyszaryczlowiek.cpcdb.alerts.FloatNumberFormatError;
+import com.github.malyszaryczlowiek.cpcdb.alertWindows.FloatNumberFormatError;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -49,7 +50,7 @@ public class AmountColumnInitializer extends ColumnInitializer implements Initia
                     }
                     catch (NumberFormatException e) {
                         e.printStackTrace();
-                        new FloatNumberFormatError().show();
+                        new FloatNumberFormatError(Alert.AlertType.ERROR).show();
                     }
                 });
         amountCol.setPrefWidth(Double.parseDouble(SecureProperties.getProperty("column.width.Amount")));

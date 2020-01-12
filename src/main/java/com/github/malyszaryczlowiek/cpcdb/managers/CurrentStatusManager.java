@@ -14,9 +14,11 @@ public class CurrentStatusManager
         currentStatus = status;
     }
 
+    /*
     public Text getCurrentStatus() {
         return currentStatus;
     }
+     */
 
     public void setCurrentStatus(String text) {
         currentStatus.setText(text);
@@ -26,6 +28,12 @@ public class CurrentStatusManager
         currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
         currentStatus.setFill(Paint.valueOf("red"));
         currentStatus.setText(error);
+    }
+
+    public void setWarningMessage(String warning) {
+        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
+        currentStatus.setFill(Paint.valueOf("orange"));
+        currentStatus.setText(warning);
     }
 
     public void resetFont() {

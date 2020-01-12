@@ -1,10 +1,11 @@
-package com.github.malyszaryczlowiek.cpcdb.alerts;
+package com.github.malyszaryczlowiek.cpcdb.alertWindows;
 
-public class FatalDbConnectionError extends ErrorAlert
+import javafx.scene.control.Alert;
+
+public class FatalDbConnectionError extends AlertWindow
 {
-    public FatalDbConnectionError()
-    {
-        super();
+    public FatalDbConnectionError(Alert.AlertType alertType) {
+        super(alertType);
         alert.setWidth(750);
         alert.setHeight(550);
         alert.setTitle("Fatal Connection Error");

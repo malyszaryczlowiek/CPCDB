@@ -1,10 +1,11 @@
-package com.github.malyszaryczlowiek.cpcdb.alerts;
+package com.github.malyszaryczlowiek.cpcdb.alertWindows;
 
-public class FloatNumberFormatError extends ErrorAlert
+import javafx.scene.control.Alert;
+
+public class FloatNumberFormatError extends AlertWindow
 {
-    public FloatNumberFormatError()
-    {
-        super();
+    public FloatNumberFormatError(Alert.AlertType alertType) {
+        super(alertType);
         alert.setWidth(700);
         alert.setHeight(400);
         alert.setTitle("Error");

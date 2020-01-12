@@ -1,7 +1,7 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
-import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorAlert;
-import com.github.malyszaryczlowiek.cpcdb.alerts.IncorrectPortNumberFormat;
+import com.github.malyszaryczlowiek.cpcdb.alertWindows.AlertWindow;
+import com.github.malyszaryczlowiek.cpcdb.alertWindows.IncorrectPortNumberFormat;
 import com.github.malyszaryczlowiek.cpcdb.util.CloseProgramNotifier;
 import com.github.malyszaryczlowiek.cpcdb.helperClasses.LaunchTimer;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
@@ -71,8 +71,7 @@ public class SqlPropertiesStageController implements Initializable
         catch (NumberFormatException e) {
             e.printStackTrace();
 
-            ErrorAlert incorrectPortNumberFormat = new IncorrectPortNumberFormat();
-            incorrectPortNumberFormat.show();
+            new IncorrectPortNumberFormat(Alert.AlertType.ERROR).show();
 
             return;
         }

@@ -1,9 +1,11 @@
-package com.github.malyszaryczlowiek.cpcdb.alerts;
+package com.github.malyszaryczlowiek.cpcdb.alertWindows;
 
-public class IncorrectPortNumberFormat extends ErrorAlert
+import javafx.scene.control.Alert;
+
+public class IncorrectPortNumberFormat extends AlertWindow
 {
-    public IncorrectPortNumberFormat(){
-        super();
+    public IncorrectPortNumberFormat(Alert.AlertType alertType) {
+        super(alertType);
         alert.setWidth(700);
         alert.setHeight(400);
         alert.setTitle("Error");
