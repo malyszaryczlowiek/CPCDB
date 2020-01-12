@@ -275,11 +275,13 @@ public class MainStageController implements Initializable,
                     demonTimer.stopTimer("stopping demon timer");
                 }
             };
-
+            //to jest pierwsza rzecz do zrobienia
+            // TODO poprawić to używając wait() notyfyAll() na lockProvider.getLock(LockTypes.PROGRESS_VALUE)
+            // TODO albo na CurrentStatusManager.class ale to może powowdować DeadLocka i program się zwiesi
             loadingDatabaseTask.messageProperty().addListener(
                     (observableValue, s, t1) -> {
-                        System.out.println("wyświelta się: " + s);
-                        switch (s) {
+                        System.out.println("wyświelta się: " + t1);
+                        switch (t1) {
                             case "cannotConnectToAllDB":
                                 new FatalDbConnectionError(Alert.AlertType.ERROR).show();
                                 startService();
@@ -322,7 +324,7 @@ public class MainStageController implements Initializable,
                                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                     progressBar.setProgress(0.0);
                                 }
-                                currentStatusManager.setWarningMessage("Data loaded. Warning (click here for more info)");
+                                currentStatusManager.setWarningMessage("Data loaded. Warning (click here for info)");
                                 break;
                             case "UnknownErrorOccurred":
                                 new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
@@ -332,7 +334,7 @@ public class MainStageController implements Initializable,
                                 currentStatusManager.setErrorMessage("Unknown Error Occurred");
                                 break;
                             default:  // correct data loading
-                                currentStatusManager.setCurrentStatus(s);
+                                currentStatusManager.setCurrentStatus(t1);
                                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                     progressBar.setProgress(progressValue.doubleValue());
                                 }
