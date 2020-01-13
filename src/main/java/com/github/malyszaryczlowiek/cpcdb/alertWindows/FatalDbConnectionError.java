@@ -6,8 +6,6 @@ public class FatalDbConnectionError extends AlertWindow
 {
     public FatalDbConnectionError(Alert.AlertType alertType) {
         super(alertType);
-        alert.setWidth(750);
-        alert.setHeight(550);
         alert.setTitle("Fatal Connection Error");
         alert.setHeaderText("Cannot connect neither remote nor local server.");
         alert.setContentText("Please check your Internet connection. If connection works correctly, please" +

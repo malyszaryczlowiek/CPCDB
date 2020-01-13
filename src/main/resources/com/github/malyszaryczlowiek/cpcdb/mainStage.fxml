@@ -86,7 +86,7 @@
       <ToolBar maxWidth="4100.0" minHeight="22.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="22.0">
          <items>
             <Separator orientation="VERTICAL" />
-            <Text fx:id="currentStatus" onMouseClicked="#onShowErrors" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" textAlignment="RIGHT" wrappingWidth="300.0" />
+            <Text fx:id="currentStatus" onMouseClicked="#onShowErrors" strokeType="OUTSIDE" strokeWidth="0.0" text="Text" textAlignment="RIGHT" wrappingWidth="450.0" />
             <Separator orientation="VERTICAL" />
             <ProgressBar fx:id="progressBar" minHeight="20.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="20.0" prefWidth="200.0" progress="0.0" />
             <Separator orientation="VERTICAL" prefHeight="200.0" />

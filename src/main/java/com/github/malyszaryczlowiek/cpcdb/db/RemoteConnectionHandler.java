@@ -25,15 +25,12 @@ class RemoteConnectionHandler implements ConnectionHandler
             return CONNECTION;
         }
         catch ( CommunicationsException e) { //CJCommunicationsException |
-            // System.out.println("Message:\n" + e.getMessage());
             e.printStackTrace();
             ErrorFlagsManager.setErrorTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
             return new LocalConnectionHandler().connect();
         }
         catch (SQLException e) {
-            String message = e.getMessage(); // Access denied for user 'Wa1s8JBvy'@'89.64.23.97' (using password: YES)
-            //if (message.contains("Access denied for user"))
-                ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
             e.printStackTrace();
             return new LocalConnectionHandler().connect();
         }

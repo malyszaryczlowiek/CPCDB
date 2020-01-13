@@ -1,17 +1,13 @@
 package com.github.malyszaryczlowiek.cpcdb.alertWindows;
 
 import javafx.scene.control.Alert;
-import javafx.stage.Modality;
 
 public class RemoteServerConnectionError extends AlertWindow
 {
     public RemoteServerConnectionError(Alert.AlertType alertType) {
         super(alertType);
-        alert.setWidth(700);
-        alert.setHeight(400);
-        alert.initModality(Modality.APPLICATION_MODAL);
-        alert.setTitle("Connection Error");
-        alert.setHeaderText("Cannot connect to remote server.");
+        alert.setTitle("Error");
+        alert.setHeaderText("Cannot connect to Remote Server.");
         alert.setContentText("Please check your Internet connection. Currently You are working on Local " +
                 "copy of Database. If connection works correctly, please" +
                 "contact Server Administrator.");

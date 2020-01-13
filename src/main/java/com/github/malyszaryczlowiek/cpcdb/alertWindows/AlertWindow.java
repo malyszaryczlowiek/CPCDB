@@ -8,6 +8,8 @@ public abstract class AlertWindow implements ShortAlert
 
     AlertWindow(Alert.AlertType alertType) {
         alert = new Alert(alertType);
+        alert.setWidth(750);
+        alert.setHeight(600);
         alert.setResizable(true);
     }
 
