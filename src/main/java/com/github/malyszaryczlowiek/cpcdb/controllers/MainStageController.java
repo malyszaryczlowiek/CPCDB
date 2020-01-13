@@ -100,8 +100,7 @@ public class MainStageController implements Initializable,
     @FXML private Text currentStatus;
     private DoubleProperty progressValue;
 
-    private boolean toUnblock = false; //TODO rename zmienić nazwę tak aby mówiła, że blokujemy dwa wątki
-    // i zwalniamy ich locki tak aby trzeci wątek dokończył swoją pracę i notyficował pozostałe
+    private boolean unblockingTask3 = false;
     private ChangesDetector changesDetector;
     private ColumnManager columnManager;
     private List<Compound> fullListOfCompounds;
@@ -294,8 +293,6 @@ public class MainStageController implements Initializable,
                     demonTimer.stopTimer("stopping demon timer");
                 }
             };
-            // TODO poprawić to używając wait() notyfyAll() na lockProvider.getLock(LockTypes.PROGRESS_VALUE)
-            // TODO albo na CurrentStatusManager.class ale to może powowdować DeadLocka i program się zwiesi
             // poboczny task musi waitować, natomiast main thread musi notifyAll()
             loadingDatabaseTask.messageProperty().addListener(
                     (observableValue, s, t1) -> {
@@ -840,8 +837,8 @@ public class MainStageController implements Initializable,
                 menuViewFullScreen, menuHelpAboutCPCDB);
         menuViewFullScreen.setSelected(false);
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
-            if (!toUnblock)
-                toUnblock = true;
+            if (!unblockingTask3)
+                unblockingTask3 = true;
             else {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
                 System.out.println("Notify called in task 1");
@@ -855,8 +852,8 @@ public class MainStageController implements Initializable,
         new ArgonColumnInitializer(argonCol).initialize();
         new ContainerColumnInitializer(containerCol).initialize();
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
-            if (!toUnblock)
-                toUnblock = true;
+            if (!unblockingTask3)
+                unblockingTask3 = true;
             else {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
                 System.out.println("Notify called in task 2");

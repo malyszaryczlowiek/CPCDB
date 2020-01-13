@@ -35,6 +35,33 @@ class RemoteConnectionHandler implements ConnectionHandler
             return new LocalConnectionHandler().connect();
         }
     }
+    /*
+    public Connection connect(Executor executor) {
+        Connection CONNECTION;
+        ConnectionQueryBuilder remoteConnectionQueryBuilder = new RemoteConnectionQueryBuilder();
+        remoteConnectionQueryBuilder.addConnectionConfigurations();
+        try {
+            CONNECTION = DriverManager.getConnection(
+                    remoteConnectionQueryBuilder.getQuery(),
+                    SecureProperties.getProperty("settings.db.remote.user"),
+                    SecureProperties.getProperty("settings.db.remote.passphrase"));
+            if ( !SecureProperties.hasProperty("remoteDBExists") ) // if db does not exist, we must create it
+                new DatabaseAndTableCreator(CONNECTION, DBNAME, DatabaseLocation.REMOTE);
+            CONNECTION.setNetworkTimeout(executor, 3000);
+            return CONNECTION;
+        }
+        catch ( CommunicationsException e) { //CJCommunicationsException |
+            e.printStackTrace();
+            ErrorFlagsManager.setErrorTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
+            return new LocalConnectionHandler().connect();
+        }
+        catch (SQLException e) {
+            ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
+            e.printStackTrace();
+            return new LocalConnectionHandler().connect();
+        }
+    }
+     */
 }
 
 
