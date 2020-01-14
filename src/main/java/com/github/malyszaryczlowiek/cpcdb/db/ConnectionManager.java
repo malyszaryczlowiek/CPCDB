@@ -8,6 +8,11 @@ public class ConnectionManager
         ConnectionHandler handler = new RemoteConnectionHandler();
         return handler.connect();
     }
+
+    public static Connection reconnectToRemoteDb(){
+        ConnectionHandler handler = new ServiceReconnectionHandler();
+        return handler.connect();
+    }
 }
 /*
 sudo service mysql status

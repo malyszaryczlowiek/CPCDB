@@ -22,6 +22,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -29,6 +30,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,6 +109,7 @@ public class MainStageController implements Initializable,
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
     private LaunchTimer demonTimer;
+    private ScheduledService<Void> service;
 
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
@@ -147,6 +150,7 @@ public class MainStageController implements Initializable,
             {
                 @Override
                 protected Void call() {
+                    updateMessage("Starting Background Thread");
                     try (Connection connection = ConnectionManager.connectToDb()) {
                         // not working on any copy
                         if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
@@ -295,9 +299,9 @@ public class MainStageController implements Initializable,
             };
             // poboczny task musi waitować, natomiast main thread musi notifyAll()
             loadingDatabaseTask.messageProperty().addListener(
-                    (observableValue, s, t1) -> {
-                        // System.out.println("wyświelta się t1: " + t1 + " // natomiast s: " + s);
-                        switch (t1) {
+                    (observableValue, oldString, newString) -> {
+                        // System.out.println("wyświelta się newString: " + newString + " // natomiast oldString: " + oldString);
+                        switch (newString) {
                             case "cannotConnectToAllDB":
                                 new FatalDbConnectionError(Alert.AlertType.ERROR).show();
                                 startService();
@@ -318,13 +322,13 @@ public class MainStageController implements Initializable,
                                 break;
                             case "cannotConnectToRemoteDB":
                                 new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+                                startService();
                                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                     lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
                                 }
                                 break;
                             case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
                                 new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
-                                startService();
                                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                     progressBar.setProgress(0.0);
                                     currentStatusManager.setErrorMessage("Error (click here for more info)");
@@ -363,7 +367,7 @@ public class MainStageController implements Initializable,
                                 break;
                             default:  // correct data loading
                                 progressBar.setProgress(progressValue.doubleValue());
-                                currentStatusManager.setCurrentStatus(t1);
+                                currentStatusManager.setCurrentStatus(newString);
                                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                                     lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
                                 }
@@ -921,53 +925,43 @@ public class MainStageController implements Initializable,
     }
 
     private void startService() {
-        /*
-                connectionService = new DatabaseConnectionService();
-                connectionService.setOnSucceeded(
-                        workerStateEvent -> {
-                            connectionService.cancel();
 
-                            //  tutaj zaimplementować jak uda się odzystkać połączenie do zdalnego serwera.
-                            // najpierw zapytać czy wszystkie dane są zapisane a następnie czy
-                            /*
-                    // naprawić i zaimplementować
-                    askWhetherMergeDataWith DB;
+        // jeśli wszystko jest ok to i jest połączenie to pokaż wiadomość z info ,
+        // że jest połączenie i zapytaj czy zmergować lokalną bazę danych ze zdalną
+        // i czy wczytać tę bazę danych
 
-                    if (yes)
-                        merge(); updateNow();
-                    if (no)
-                        updateWhenClosingApplication();
+        service = new ScheduledService<Void>() {
+            @Override
+            protected Task<Void> createTask() {
 
+                Task<Void> task = new Task<Void>() {
+                    @Override
+                    protected Void call() {
+                        try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
+                            System.out.println("Wywołałem task z servisu");
+                            if (connection != null)
+                                updateMessage("connectionEstablished");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
 
-                    observable = connectionService.getValue();
+                // tutaj implementuje aby pokazał okienko z informacją, że jest już możliwe
+                // połączenie ze zdalnum serwerem
+                task.messageProperty().addListener( (observable, oldValue, newValue) -> {
+                    if (newValue.equals("connectionEstablished")) {
+                        currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
+                    }
+                });
 
+                return task;
+            }
+        };
 
-
-                mainSceneTableView.setItems(observableList);
-            });
-            connectionService.start();
-                 */
-
-
-
-        /*
-    @FXML
-    protected void onMenuEditUnSelectAll() {
-        /*
-        //int first = selectedIndexes[0];
-        //int[] newIndexes = Arrays.copyOfRange(selectedIndexes,1, selectedIndexes.length);
-        //for (int selectedIndex : selectedIndexes) mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex);
-
-    //mainSceneTableView.getSelectionModel().select(0);
-        mainSceneTableView.getSelectionModel().clearSelection();
-        mainSceneTableView.refresh();
-        Arrays.stream(selectedIndexes).forEach(selectedIndex -> mainSceneTableView.getSelectionModel().clearAndSelect(selectedIndex));
-        mainSceneTableView.getSelectionModel().clearSelection();
-    //mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    //mainSceneTableView.getSelectionModel().selectIndices(first, newIndexes);
-}
-*/
-
+        service.setPeriod(Duration.seconds(3));
+        service.start();
     }
 }
 
