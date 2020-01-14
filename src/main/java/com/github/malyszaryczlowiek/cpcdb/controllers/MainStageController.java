@@ -109,7 +109,7 @@ public class MainStageController implements Initializable,
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
     private LaunchTimer demonTimer;
-    private ScheduledService<Void> service;
+    private ScheduledService<Void> databasePingService;
 
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
@@ -146,11 +146,64 @@ public class MainStageController implements Initializable,
             if ( !SecureProperties.hasProperty("column.width.Smiles") )
                 setWidthOfColumns();
             demonTimer = new LaunchTimer();
-            Task<Void> loadingDatabaseTask = new Task<>()
+            Task<String> loadingDatabaseTask = new Task<>()
             {
+                @Override
+                protected String call()  {
+                        //updateMessage("Starting Background Thread");
+                        //stopThisThread(100);
+                        try (Connection connection = ConnectionManager.connectToDb()) {
+                            // not working on any copy
+                            if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                                updateValue("cannotConnectToAllDB");
+                                // not working on any copy
+                            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                                updateValue("cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase");
+                                // working on local copy
+                            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
+                                    && connection != null ) {
+                                updateValue("cannotConnectToRemoteDB");
+                                stopThisThread(50);
+                                loadTable(connection);
+                            }
+                            // not working on any copy
+                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                                updateValue("incorrectRemotePassphraseAndCannotConnectToLocalDatabase");
+                                // not working on any copy
+                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                                updateValue("incorrectRemoteAndLocalPassphrase");
+                                // working on local copy
+                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
+                                    && connection != null) {
+                                updateValue("incorrectRemotePassphrase");
+                                stopThisThread(50);
+                                loadTable(connection);
+                            } // all working ok
+                            else if (connection != null //)
+                                    && ErrorFlagsManager.getMapOfErrors().values().stream().noneMatch(value -> value) )
+                                loadTable(connection);
+                            else
+                                updateMessage("UnknownErrorOccurred");
+                        }
+                        catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+
+                /*
                 @Override
                 protected Void call() {
                     updateMessage("Starting Background Thread");
+                    stopThisThread(100);
                     try (Connection connection = ConnectionManager.connectToDb()) {
                         // not working on any copy
                         if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
@@ -197,6 +250,8 @@ public class MainStageController implements Initializable,
                     }
                     return null;
                 }
+
+                 */
 
 
                 private void stopThisThread(int milliseconds) {
@@ -297,84 +352,13 @@ public class MainStageController implements Initializable,
                     demonTimer.stopTimer("stopping demon timer");
                 }
             };
-            // poboczny task musi waitować, natomiast main thread musi notifyAll()
+
             loadingDatabaseTask.messageProperty().addListener(
-                    (observableValue, oldString, newString) -> {
-                        // System.out.println("wyświelta się newString: " + newString + " // natomiast oldString: " + oldString);
-                        switch (newString) {
-                            case "cannotConnectToAllDB":
-                                new FatalDbConnectionError(Alert.AlertType.ERROR).show();
-                                startService();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
-                                new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
-                                startService();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "cannotConnectToRemoteDB":
-                                new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
-                                startService();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
-                                new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "incorrectRemoteAndLocalPassphrase":
-                                new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "incorrectRemotePassphrase":
-                                new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    currentStatusManager.setCurrentStatus("Warning (click here for more info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "showWarning":
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setWarningMessage("Data loaded. Warning (click here for info)");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            case "UnknownErrorOccurred":
-                                new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    progressBar.setProgress(0.0);
-                                    currentStatusManager.setErrorMessage("Unknown Error Occurred");
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                            default:  // correct data loading
-                                progressBar.setProgress(progressValue.doubleValue());
-                                currentStatusManager.setCurrentStatus(newString);
-                                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                                }
-                                break;
-                        }
-                    }
-            );
+                    (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
+
+            loadingDatabaseTask.valueProperty().addListener(
+                    (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
+
 
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
@@ -930,11 +914,11 @@ public class MainStageController implements Initializable,
         // że jest połączenie i zapytaj czy zmergować lokalną bazę danych ze zdalną
         // i czy wczytać tę bazę danych
 
-        service = new ScheduledService<Void>() {
+        databasePingService = new ScheduledService<>()
+        {
             @Override
             protected Task<Void> createTask() {
-
-                Task<Void> task = new Task<Void>() {
+                Task<Void> task = new Task<>() {
                     @Override
                     protected Void call() {
                         try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
@@ -947,21 +931,92 @@ public class MainStageController implements Initializable,
                         return null;
                     }
                 };
-
-                // tutaj implementuje aby pokazał okienko z informacją, że jest już możliwe
-                // połączenie ze zdalnum serwerem
-                task.messageProperty().addListener( (observable, oldValue, newValue) -> {
+                task.messageProperty().addListener((observable, oldValue, newValue) -> {
                     if (newValue.equals("connectionEstablished")) {
                         currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
+                        databasePingService.cancel();
                     }
                 });
-
                 return task;
             }
         };
+        databasePingService.setPeriod(Duration.seconds(3));
+        databasePingService.start();
+    }
 
-        service.setPeriod(Duration.seconds(3));
-        service.start();
+    private void manageConnectingToDbCommunicates(String newString) {
+        switch (newString) {
+            case "cannotConnectToAllDB":
+                new FatalDbConnectionError(Alert.AlertType.ERROR).show();
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
+                new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "cannotConnectToRemoteDB":
+                new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
+                new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemoteAndLocalPassphrase":
+                new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemotePassphrase":
+                new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    currentStatusManager.setCurrentStatus("Warning (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "showWarning":
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setWarningMessage("Data loaded. Warning (click here for info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "UnknownErrorOccurred":
+                new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Unknown Error Occurred");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            default:  // correct data loading
+                progressBar.setProgress(progressValue.doubleValue());
+                currentStatusManager.setCurrentStatus(newString);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+        }
     }
 }
 
