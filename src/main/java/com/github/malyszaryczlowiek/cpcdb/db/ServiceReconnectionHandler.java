@@ -23,17 +23,17 @@ public class ServiceReconnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.remote.passphrase"));
             if ( !SecureProperties.hasProperty("remoteDBExists") ) // if db does not exist, we must create it
                 new DatabaseAndTableCreator(CONNECTION, DBNAME, DatabaseLocation.REMOTE);
-            ErrorFlagsManager.setErrorTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
-            ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, false);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, false);
             return CONNECTION;
         }
         catch ( CommunicationsException e) { //CJCommunicationsException |
-            ErrorFlagsManager.setErrorTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
             e.printStackTrace();
             return null;
         }
         catch (SQLException e) {
-            ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
             e.printStackTrace();
             return null;
         }

@@ -1,6 +1,6 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
-import com.github.malyszaryczlowiek.cpcdb.alertWindows.*;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ChangesDetector;
@@ -15,7 +15,7 @@ import com.github.malyszaryczlowiek.cpcdb.util.CloseProgramNotifier;
 import com.github.malyszaryczlowiek.cpcdb.helperClasses.LaunchTimer;
 import com.github.malyszaryczlowiek.cpcdb.util.SearchEngine;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
-import com.github.malyszaryczlowiek.cpcdb.windowLoaders.*;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.*;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -120,7 +120,7 @@ public class MainStageController implements Initializable,
         initializationTimer = new LaunchTimer();
 
         if ( checkIfAskForDBProperties() )
-            new InitializingDBPropertiesWindow();
+            WindowFactory.showWindow(WindowsEnum.INITIALIZING_DB_PROPERTIES_WINDOW, null, null);
         else {
             LaunchTimer keyAndPropertiesLoading = new LaunchTimer();
             SecureProperties.loadProperties();
@@ -150,8 +150,6 @@ public class MainStageController implements Initializable,
             {
                 @Override
                 protected String call()  {
-                        //updateMessage("Starting Background Thread");
-                        //stopThisThread(100);
                         try (Connection connection = ConnectionManager.connectToDb()) {
                             // not working on any copy
                             if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
@@ -198,61 +196,6 @@ public class MainStageController implements Initializable,
                         }
                         return null;
                     }
-
-                /*
-                @Override
-                protected Void call() {
-                    updateMessage("Starting Background Thread");
-                    stopThisThread(100);
-                    try (Connection connection = ConnectionManager.connectToDb()) {
-                        // not working on any copy
-                        if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                            updateMessage("cannotConnectToAllDB");
-                        // not working on any copy
-                        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                            updateMessage("cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase");
-                        // working on local copy
-                        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                                && connection != null ) {
-                            updateMessage("cannotConnectToRemoteDB");
-                            stopThisThread(50);
-                            loadTable(connection);
-                        }
-                        // not working on any copy
-                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                            updateMessage("incorrectRemotePassphraseAndCannotConnectToLocalDatabase");
-                        // not working on any copy
-                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                            updateMessage("incorrectRemoteAndLocalPassphrase");
-                            // working on local copy
-                        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                                && connection != null) {
-                            updateMessage("incorrectRemotePassphrase");
-                            stopThisThread(50);
-                            loadTable(connection);
-                        } // all working ok
-                        else if (connection != null //)
-                                && ErrorFlagsManager.getMapOfErrors().values().stream().noneMatch(value -> value) )
-                            loadTable(connection);
-                        else
-                            updateMessage("UnknownErrorOccurred");
-                    }
-                    catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-
-                 */
-
 
                 private void stopThisThread(int milliseconds) {
                     try {
@@ -473,16 +416,16 @@ public class MainStageController implements Initializable,
     // FILE -> Add Compound
 
     @FXML
-    protected void menuFileAddCompound(ActionEvent event) throws IOException {
-        new AddCompoundWindow(this);
+    protected void menuFileAddCompound(ActionEvent event) {
+        WindowFactory.showWindow(WindowsEnum.ADD_COMPOUND_WINDOW, this, null);
         event.consume();
     }
 
     // FILE -> Search
 
     @FXML
-    protected void onFileSearchMenuItemClicked(ActionEvent actionEvent) throws IOException {
-        new SearchCompoundWindow(this);
+    protected void onFileSearchMenuItemClicked(ActionEvent actionEvent) {
+        WindowFactory.showWindow(WindowsEnum.SEARCH_COMPOUND_WINDOW, null, null);
         actionEvent.consume();
     }
 
@@ -500,7 +443,7 @@ public class MainStageController implements Initializable,
     @FXML
     protected void onMenuFilePreferencesClicked(ActionEvent event) {
         event.consume();
-        new PreferencesWindow();
+        WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
     }
 
     // FILE -> Quit
@@ -647,10 +590,10 @@ public class MainStageController implements Initializable,
 
 
     @FXML
-    protected void showEditCompoundStage() throws IOException {
+    protected void showEditCompoundStage() {
         Compound selectedItems = mainSceneTableView.getSelectionModel()
                 .getSelectedItems().get(0);
-        new EditCompoundWindow(this,  selectedItems);
+        WindowFactory.showWindow(WindowsEnum.EDIT_COMPOUND_WINDOW, this, selectedItems);
     }
 
 
@@ -692,7 +635,7 @@ public class MainStageController implements Initializable,
             mainSceneTableView.refresh();
         }
         else
-            new NoFoundCompound(Alert.AlertType.INFORMATION).show();
+            ShortAlertWindowFactory.showErrorWindow(ErrorType.NOT_FOUND_COMPOUND);
     }
 
     @FXML
@@ -732,7 +675,7 @@ public class MainStageController implements Initializable,
 
     private void closeProgram() {
         if ( changesDetector.returnCurrentIndex() > 0 )
-            new SaveChangesBeforeQuitWindow(this);
+            WindowFactory.showWindow(WindowsEnum.SAVE_CHANGES_BEFORE_QUIT_WINDOW,this, null);
         else
             onCloseProgramWithoutChanges();
     }
@@ -827,10 +770,8 @@ public class MainStageController implements Initializable,
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!unblockingTask3)
                 unblockingTask3 = true;
-            else {
+            else
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
-                System.out.println("Notify called in task 1");
-            }
         }
     }
 
@@ -842,10 +783,8 @@ public class MainStageController implements Initializable,
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!unblockingTask3)
                 unblockingTask3 = true;
-            else {
+            else
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
-                System.out.println("Notify called in task 2");
-            }
         }
     }
 
@@ -869,51 +808,50 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onShowHideColumn() {
-        new ColumnManagerWindow();
+        WindowFactory.showWindow(WindowsEnum.COLUMN_MANAGER_WINDOW, null, null);
     }
 
     @FXML
-    private void onShowErrors() {
-        if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-            new FatalDbConnectionError(Alert.AlertType.ERROR).show();
+    private void onCurrentStatusTextClicked() {
+        String text = currentStatus.getText();
+        if ( text.contains("Warning") || text.contains("Error") ) {
+            if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
+
+            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
 
 
-        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-            new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
 
 
-        else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-            new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
 
 
-        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-            new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
+            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
 
 
-        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-            new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
-
-
-        else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) ) {
-            new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
+            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) ) {
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
+            }
         }
+        if (text.equals("Connection to Remote Database Established"))
+        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,null,null);
         currentStatusManager.resetFont();
     }
 
     private void startService() {
-
-        // jeśli wszystko jest ok to i jest połączenie to pokaż wiadomość z info ,
-        // że jest połączenie i zapytaj czy zmergować lokalną bazę danych ze zdalną
-        // i czy wczytać tę bazę danych
-
         databasePingService = new ScheduledService<>()
         {
             @Override
@@ -922,7 +860,6 @@ public class MainStageController implements Initializable,
                     @Override
                     protected Void call() {
                         try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-                            System.out.println("Wywołałem task z servisu");
                             if (connection != null)
                                 updateMessage("connectionEstablished");
                         } catch (SQLException e) {
@@ -933,8 +870,10 @@ public class MainStageController implements Initializable,
                 };
                 task.messageProperty().addListener((observable, oldValue, newValue) -> {
                     if (newValue.equals("connectionEstablished")) {
+                        currentStatusManager.setGreenFont();
                         currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
                         databasePingService.cancel();
+                        ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
                     }
                 });
                 return task;
@@ -947,7 +886,7 @@ public class MainStageController implements Initializable,
     private void manageConnectingToDbCommunicates(String newString) {
         switch (newString) {
             case "cannotConnectToAllDB":
-                new FatalDbConnectionError(Alert.AlertType.ERROR).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
                 startService();
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     progressBar.setProgress(0.0);
@@ -956,7 +895,7 @@ public class MainStageController implements Initializable,
                 }
                 break;
             case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
-                new CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
                 startService();
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     progressBar.setProgress(0.0);
@@ -965,14 +904,14 @@ public class MainStageController implements Initializable,
                 }
                 break;
             case "cannotConnectToRemoteDB":
-                new RemoteServerConnectionError(Alert.AlertType.WARNING).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
                 startService();
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
                 }
                 break;
             case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
-                new RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType.ERROR).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     progressBar.setProgress(0.0);
                     currentStatusManager.setErrorMessage("Error (click here for more info)");
@@ -980,7 +919,7 @@ public class MainStageController implements Initializable,
                 }
                 break;
             case "incorrectRemoteAndLocalPassphrase":
-                new IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType.ERROR).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     progressBar.setProgress(0.0);
                     currentStatusManager.setErrorMessage("Error (click here for more info)");
@@ -988,7 +927,7 @@ public class MainStageController implements Initializable,
                 }
                 break;
             case "incorrectRemotePassphrase":
-                new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     currentStatusManager.setCurrentStatus("Warning (click here for more info)");
                     lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
@@ -1002,7 +941,7 @@ public class MainStageController implements Initializable,
                 }
                 break;
             case "UnknownErrorOccurred":
-                new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                     progressBar.setProgress(0.0);
                     currentStatusManager.setErrorMessage("Unknown Error Occurred");

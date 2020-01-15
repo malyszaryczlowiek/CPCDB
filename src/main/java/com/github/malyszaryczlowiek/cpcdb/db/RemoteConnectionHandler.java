@@ -26,11 +26,11 @@ class RemoteConnectionHandler implements ConnectionHandler
         }
         catch ( CommunicationsException e) { //CJCommunicationsException |
             e.printStackTrace();
-            ErrorFlagsManager.setErrorTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
             return new LocalConnectionHandler().connect();
         }
         catch (SQLException e) {
-            ErrorFlagsManager.setErrorTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
             e.printStackTrace();
             return new LocalConnectionHandler().connect();
         }

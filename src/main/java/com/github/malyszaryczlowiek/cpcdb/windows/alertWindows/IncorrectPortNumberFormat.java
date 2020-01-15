@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class IncorrectPortNumberFormat extends AlertWindow
+class IncorrectPortNumberFormat extends AlertWindow
 {
-    public IncorrectPortNumberFormat(Alert.AlertType alertType) {
+    IncorrectPortNumberFormat(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Error");
         alert.setHeaderText("Incorrect Remote or Local Port Number Format.");

@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase extends AlertWindow
+class RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase extends AlertWindow
 {
-    public RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType alertType) {
+    RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Fatal Connection Error");
         alert.setHeaderText("Incorrect Username or Passphrase for Remote Server and Connection Error to Local Database.");

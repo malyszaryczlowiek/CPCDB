@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class NoFoundCompound extends AlertWindow
+class NotFoundCompound extends AlertWindow
 {
-    public NoFoundCompound(Alert.AlertType alertType) {
+    NotFoundCompound(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Information");
         alert.setHeaderText("There was no matching compounds!");

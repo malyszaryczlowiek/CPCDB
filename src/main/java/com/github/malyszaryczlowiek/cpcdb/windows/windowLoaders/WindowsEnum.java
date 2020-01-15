@@ -1,0 +1,13 @@
+package com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders;
+
+public enum WindowsEnum
+{
+    ADD_COMPOUND_WINDOW,
+    COLUMN_MANAGER_WINDOW,
+    EDIT_COMPOUND_WINDOW,
+    INITIALIZING_DB_PROPERTIES_WINDOW,
+    SAVE_CHANGES_BEFORE_QUIT_WINDOW,
+    SEARCH_COMPOUND_WINDOW,
+    SETTINGS_WINDOW,
+    MERGING_REMOTE_DB_WINDOW
+}

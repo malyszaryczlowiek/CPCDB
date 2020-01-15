@@ -1,8 +1,9 @@
-package com.github.malyszaryczlowiek.cpcdb.windowLoaders;
+package com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders;
 
 import com.github.malyszaryczlowiek.cpcdb.controllers.AddCompoundStageController;
 import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.ShowAble;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -11,11 +12,13 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class AddCompoundWindow
+class AddCompoundWindow implements ShowAble
 {
-    public AddCompoundWindow(MainStageController mainStageController) throws IOException
+    private Stage addCompoundStage;
+
+    AddCompoundWindow(MainStageController mainStageController) throws IOException
     {
-        Stage addCompoundStage = new Stage();
+        addCompoundStage = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("addCompoundStage.fxml"));
         Parent root = loader.load();
         AddCompoundStageController controller = loader.getController(); // casting on (AddCompoundStageController)
@@ -31,7 +34,10 @@ public class AddCompoundWindow
         // https://stackoverflow.com/questions/13246211/javafx-how-to-get-stage-from-controller-during-initialization
         controller.setStage(addCompoundStage);
         controller.setMainStageControllerObject(mainStageController);
+    }
 
+    @Override
+    public void show() {
         addCompoundStage.show();
     }
 }

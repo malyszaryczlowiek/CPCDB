@@ -21,7 +21,7 @@ public class ErrorFlagsManager
         return mapOfErrors;
     }
 
-    public static void setErrorTo(ErrorFlags flag, boolean value) {
+    public static void setErrorFlagTo(ErrorFlags flag, boolean value) {
         mapOfErrors.replace(flag, value);
     }
 

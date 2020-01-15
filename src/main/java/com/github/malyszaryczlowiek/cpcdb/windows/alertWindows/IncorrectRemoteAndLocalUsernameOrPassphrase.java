@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class IncorrectRemoteAndLocalUsernameOrPassphrase extends AlertWindow
+class IncorrectRemoteAndLocalUsernameOrPassphrase extends AlertWindow
 {
-    public IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType alertType) {
+    IncorrectRemoteAndLocalUsernameOrPassphrase(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Fatal Connection Error");
         alert.setHeaderText("Incorrect Username or Passphrase.");

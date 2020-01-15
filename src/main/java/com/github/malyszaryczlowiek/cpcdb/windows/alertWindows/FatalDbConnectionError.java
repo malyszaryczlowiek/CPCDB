@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class FatalDbConnectionError extends AlertWindow
+class FatalDbConnectionError extends AlertWindow
 {
-    public FatalDbConnectionError(Alert.AlertType alertType) {
+    FatalDbConnectionError(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Fatal Connection Error");
         alert.setHeaderText("Cannot connect neither remote nor local server.");

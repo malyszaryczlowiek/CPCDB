@@ -40,4 +40,10 @@ public class CurrentStatusManager
         currentStatus.setFont(Font.getDefault());
         currentStatus.setFill(Paint.valueOf("black"));
     }
+
+    public void setGreenFont() {
+        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
+        currentStatus.setFont(Font.getDefault());
+        currentStatus.setFill(Paint.valueOf("green"));
+    }
 }

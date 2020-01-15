@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class RemoteServerConnectionError extends AlertWindow
+class RemoteServerConnectionError extends AlertWindow
 {
-    public RemoteServerConnectionError(Alert.AlertType alertType) {
+    RemoteServerConnectionError(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Error");
         alert.setHeaderText("Cannot connect to Remote Server.");

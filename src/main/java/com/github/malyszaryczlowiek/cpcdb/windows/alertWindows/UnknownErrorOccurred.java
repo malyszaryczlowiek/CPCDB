@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class UnknownErrorOccurred extends AlertWindow
+class UnknownErrorOccurred extends AlertWindow
 {
-    public UnknownErrorOccurred(Alert.AlertType alertType) {
+    UnknownErrorOccurred(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Unknown Error");
         alert.setHeaderText("Something Went Very Very Wrong");

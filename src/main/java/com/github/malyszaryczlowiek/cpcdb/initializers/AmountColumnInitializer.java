@@ -1,6 +1,6 @@
 package com.github.malyszaryczlowiek.cpcdb.initializers;
 
-import com.github.malyszaryczlowiek.cpcdb.alertWindows.FloatNumberFormatError;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.FloatNumberFormatError;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;

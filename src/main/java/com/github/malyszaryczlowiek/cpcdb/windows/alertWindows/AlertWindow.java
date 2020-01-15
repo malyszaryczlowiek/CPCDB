@@ -1,8 +1,9 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.ShowAble;
 import javafx.scene.control.Alert;
 
-public abstract class AlertWindow implements ShortAlert
+public abstract class AlertWindow implements ShowAble
 {
     Alert alert;
 

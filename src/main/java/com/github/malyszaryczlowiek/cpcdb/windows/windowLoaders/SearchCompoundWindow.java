@@ -1,7 +1,8 @@
-package com.github.malyszaryczlowiek.cpcdb.windowLoaders;
+package com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders;
 
 import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.controllers.SearchCompoundStageController;
+import com.github.malyszaryczlowiek.cpcdb.windows.ShowAble;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,11 +11,12 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class SearchCompoundWindow
+class SearchCompoundWindow implements ShowAble
 {
-    public  SearchCompoundWindow(MainStageController mainStageController) throws IOException
-    {
-        Stage searchCompoundStage = new Stage();
+    private Stage searchCompoundStage;
+
+    SearchCompoundWindow(MainStageController mainStageController) throws IOException {
+        searchCompoundStage = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("findDialogStage.fxml"));
         Parent root = loader.load();
         SearchCompoundStageController controller = loader.getController(); // casting on (SearchCompoundStageController)
@@ -30,7 +32,10 @@ public class SearchCompoundWindow
         // https://stackoverflow.com/questions/13246211/javafx-how-to-get-stage-from-controller-during-initialization
         controller.setStage(searchCompoundStage);
         controller.setMainStageControllerObject(mainStageController);
+    }
 
+    @Override
+    public void show() {
         searchCompoundStage.show();
     }
 }

@@ -1,9 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.windowLoaders;
+package com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.controllers.EditCompoundStageController;
 import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.ShowAble;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -11,11 +12,12 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-public class EditCompoundWindow
+class EditCompoundWindow implements ShowAble
 {
-    public EditCompoundWindow(MainStageController mainStageController, Compound selectedCompound) throws IOException
-    {
-        Stage showEditStage = new Stage();
+    private Stage showEditStage;
+
+    EditCompoundWindow(MainStageController mainStageController, Compound selectedCompound) throws IOException {
+        showEditStage = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("showEditCompoundStage.fxml"));
         Parent root = loader.load();
         EditCompoundStageController controller = loader.getController(); // casting on (EditCompoundStageController)
@@ -30,7 +32,10 @@ public class EditCompoundWindow
         controller.setStage(showEditStage);
         controller.setSelectedItem(selectedCompound);
         controller.setListener(mainStageController);
-        showEditStage.show();
+    }
 
+    @Override
+    public void show() {
+        showEditStage.show();
     }
 }

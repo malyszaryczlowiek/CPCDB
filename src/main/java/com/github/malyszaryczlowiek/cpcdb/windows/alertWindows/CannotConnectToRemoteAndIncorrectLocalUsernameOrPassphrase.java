@@ -1,10 +1,10 @@
-package com.github.malyszaryczlowiek.cpcdb.alertWindows;
+package com.github.malyszaryczlowiek.cpcdb.windows.alertWindows;
 
 import javafx.scene.control.Alert;
 
-public class CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase extends AlertWindow
+class CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase extends AlertWindow
 {
-    public CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType alertType) {
+    CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase(Alert.AlertType alertType) {
         super(alertType);
         alert.setTitle("Fatal Connection Errors");
         alert.setHeaderText("Cannot connect to Databases");
