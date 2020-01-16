@@ -2,50 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="55224a0e-3af4-4940-9b44-11052409e10a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MergingRemoteDbController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/ErrorType.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/FloatNumberFormatError.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/ShortAlertWindowFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/MergingRemoteDbWindow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/WindowFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/WindowsEnum.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/mergingRemoteDbStage.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/AlertWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/AlertWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/CannotConnectToRemoteAndIncorrectLocalUsernameOrPassphrase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/FatalDbConnectionError.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/FatalDbConnectionError.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/FloatNumberFormatError.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/IncorrectPortNumberFormat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/IncorrectPortNumberFormat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/IncorrectRemoteAndLocalUsernameOrPassphrase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/IncorrectRemoteAndLocalUsernameOrPassphrase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/IncorrectRemotePassphrase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/IncorrectRemotePassphrase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/NoFoundCompound.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/NotFoundCompound.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/RemoteServerConnectionError.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/RemoteServerConnectionError.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/RemoteServerPassphraseErrorAndCannotConnectToLocalDatabase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/ShortAlert.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/ShowAble.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alertWindows/UnknownErrorOccurred.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/alertWindows/UnknownErrorOccurred.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alerts/ErrorFlagsManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/alerts/ErrorFlagsManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MainStageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MainStageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/SqlPropertiesStageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/SqlPropertiesStageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/LocalConnectionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/LocalConnectionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/RemoteConnectionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/RemoteConnectionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/ServiceReconnectionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/ServiceReconnectionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/initializers/AmountColumnInitializer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/initializers/AmountColumnInitializer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/managers/CurrentStatusManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/managers/CurrentStatusManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/AddCompoundWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/AddCompoundWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/ColumnManagerWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/ColumnManagerWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/EditCompoundWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/EditCompoundWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/InitializingDBPropertiesWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/InitializingDBPropertiesWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/PreferencesWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/SettingsWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/SaveChangesBeforeQuitWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/SaveChangesBeforeQuitWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windowLoaders/SearchCompoundWindow.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/SearchCompoundWindow.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/mainStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/mainStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/addCompoundStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/addCompoundStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/askToSaveChangesBeforeQuitStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/askToSaveChangesBeforeQuitStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/columnManagerStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/columnManagerStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/findDialogStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/findDialogStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/settingsStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/settingsStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/showEditCompoundStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/showEditCompoundStage.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windowLoaders/sqlLoadingPropertiesStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/sqlLoadingPropertiesStage.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -399,7 +356,14 @@
       <option name="project" value="LOCAL" />
       <updated>1579039200318</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Asking to merge remote database window now showing. Merging not implemented. Windows and Alerts factory refactoring. Huge boring typing work.">
+      <created>1579120927945</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1579120927945</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -433,7 +397,8 @@
     <MESSAGE value="A few irrelevant changes. Mainly renaming." />
     <MESSAGE value="Scheduled Service starting properly (reconnection works). Setting up all service stuff needed (reloading database, merging databases etc.)" />
     <MESSAGE value="DatabasePingService connecting and cancelling correctly." />
-    <option name="LAST_COMMIT_MESSAGE" value="DatabasePingService connecting and cancelling correctly." />
+    <MESSAGE value="Asking to merge remote database window now showing. Merging not implemented. Windows and Alerts factory refactoring. Huge boring typing work." />
+    <option name="LAST_COMMIT_MESSAGE" value="Asking to merge remote database window now showing. Merging not implemented. Windows and Alerts factory refactoring. Huge boring typing work." />
   </component>
   <component name="WindowStateProjectService">
     <state x="1921" y="198" width="800" height="684" key="#Notifications" timestamp="1578506780044">
@@ -468,34 +433,34 @@
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="2059" y="285" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579025692352" />
-    <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2" timestamp="1579039200126">
+    <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2" timestamp="1579120927711">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
-    <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579039200126" />
-    <state width="1874" height="276" key="GridCell.Tab.0.bottom" timestamp="1579120752219">
+    <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120927711" />
+    <state width="1874" height="276" key="GridCell.Tab.0.bottom" timestamp="1579208571519">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
     <state width="1874" height="199" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1576700474564" />
-    <state width="1874" height="276" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120752219" />
-    <state width="1874" height="276" key="GridCell.Tab.0.center" timestamp="1579120752219">
+    <state width="1874" height="276" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579208571519" />
+    <state width="1874" height="276" key="GridCell.Tab.0.center" timestamp="1579208571519">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
     <state width="1874" height="199" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1576700474564" />
-    <state width="1874" height="276" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120752219" />
-    <state width="1874" height="276" key="GridCell.Tab.0.left" timestamp="1579120752219">
+    <state width="1874" height="276" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579208571519" />
+    <state width="1874" height="276" key="GridCell.Tab.0.left" timestamp="1579208571518">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
     <state width="1874" height="199" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1576700474564" />
-    <state width="1874" height="276" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120752219" />
-    <state width="1874" height="276" key="GridCell.Tab.0.right" timestamp="1579120752219">
+    <state width="1874" height="276" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579208571518" />
+    <state width="1874" height="276" key="GridCell.Tab.0.right" timestamp="1579208571519">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
     <state width="1874" height="199" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1576700474564" />
-    <state width="1874" height="276" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120752219" />
+    <state width="1874" height="276" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579208571519" />
     <state width="1874" height="193" key="GridCell.Tab.1.bottom" timestamp="1575306095309">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
@@ -524,10 +489,10 @@
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="1443" y="168" width="1682" height="737" key="SettingsEditor/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579034837764" />
-    <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1579039212065">
+    <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1579120940333">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
-    <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579039212065" />
+    <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579120940333" />
     <state x="1992" y="321" width="508" height="279" key="com.intellij.ide.util.TipDialog" timestamp="1578692603974">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>

@@ -30,6 +30,7 @@ public class WindowFactory
                     break;
                 case SETTINGS_WINDOW:
                     new SettingsWindow().show();
+                    break;
                 case MERGING_REMOTE_DB_WINDOW:
                     new MergingRemoteDbWindow().show();
                     break;
