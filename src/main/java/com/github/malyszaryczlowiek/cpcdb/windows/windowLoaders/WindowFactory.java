@@ -32,7 +32,7 @@ public class WindowFactory
                     new SettingsWindow().show();
                     break;
                 case MERGING_REMOTE_DB_WINDOW:
-                    new MergingRemoteDbWindow().show();
+                    new MergingRemoteDbWindow(mainStageController).show();
                     break;
             }
         } catch (IOException e) {

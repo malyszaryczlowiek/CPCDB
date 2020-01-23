@@ -9,7 +9,6 @@ public class CloseProgramNotifier
         CLOSE_UNINITIALIZED_PROGRAM = false;
     }
 
-
     public static boolean getIfCloseUninitializedProgram()
     {
         return CLOSE_UNINITIALIZED_PROGRAM;

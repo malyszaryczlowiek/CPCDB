@@ -205,7 +205,7 @@ public class SearchEngine
 
                     String additionalInfoFromCompoundLowercase = compound.getAdditionalInfo()
                             .trim()
-                            .replaceAll("[-,;:.}{!@#$%^&*()_|\"\'?<>=+]+"," ")
+                            .replaceAll("[-,;:.}{!@#$%^&*()_|\"'?<>=+]+"," ")
                             .replaceAll("[ ]{2,}", " ")
                             .toLowerCase();
 

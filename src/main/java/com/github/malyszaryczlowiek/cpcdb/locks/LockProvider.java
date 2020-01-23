@@ -8,7 +8,11 @@ public class LockProvider
 {
     private static Map<LockTypes, Object> mapOfLocks;
 
-    public LockProvider() {
+    public static LockProvider getLockProvider() {
+        return new LockProvider();
+    }
+
+    private LockProvider() {
         if (mapOfLocks == null) {
             LockTypes[] lockTypes = LockTypes.values();
             int size = lockTypes.length;

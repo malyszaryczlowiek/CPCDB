@@ -1,5 +1,6 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
+import com.github.malyszaryczlowiek.cpcdb.tasks.MergingWithRemote;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
@@ -45,7 +46,8 @@ public class MainStageController implements Initializable,
         AddCompoundStageController.CompoundAddedListener, // Added live updating of TableView using
         SearchCompoundStageController.SearchingCriteriaChosenListener,
         EditCompoundStageController.EditChangesStageListener,
-        AskToSaveChangesBeforeQuitController.SaveOrCancelListener
+        AskToSaveChangesBeforeQuitController.SaveOrCancelListener,
+        MergingRemoteDbController.Mergeable
 {
     private Stage primaryStage;
 
@@ -133,7 +135,7 @@ public class MainStageController implements Initializable,
             currentStatusManager = new CurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
-            lockProvider = new LockProvider();
+            lockProvider = LockProvider.getLockProvider();
             fullListOfCompounds = new ArrayList<>();
             observableList = FXCollections.observableArrayList(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
@@ -402,14 +404,10 @@ public class MainStageController implements Initializable,
      */
     @FXML
     protected void menuFile() {
-        if ( changesDetector.returnCurrentIndex() > 0) {
+        if ( changesDetector.returnCurrentIndex() > 0)
             menuFileSave.setDisable(false);
-            System.out.println("menu save is enabled");
-        }
-        else {
+        else
             menuFileSave.setDisable(true);
-            System.out.println("menu save is disabled");
-        }
     }
 
 
@@ -847,7 +845,7 @@ public class MainStageController implements Initializable,
             }
         }
         if (text.equals("Connection to Remote Database Established"))
-        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,null,null);
+        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,this,null);
         currentStatusManager.resetFont();
     }
 
@@ -949,13 +947,42 @@ public class MainStageController implements Initializable,
                 }
                 break;
             default:  // correct data loading
-                progressBar.setProgress(progressValue.doubleValue());
                 currentStatusManager.setCurrentStatus(newString);
                 synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(progressValue.doubleValue());
                     lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
                 }
                 break;
         }
+    }
+
+
+    /**
+     * From interface MergingRemoteDbController.Mergeable
+     */
+    @Override
+    public void mergeWithRemote() {
+        Task<Void> mergingTask = MergingWithRemote.getTask(progressValue);
+
+        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
+            currentStatusManager.setCurrentStatus(newMessage)
+        );
+
+        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
+            progressBar.setProgress((Double) newValue)
+        );
+
+        Thread mergingThread = new Thread(mergingTask);
+        mergingThread.setDaemon(true);
+        mergingThread.start();
+    }
+
+    /**
+     * From interface MergingRemoteDbController.Mergeable
+     */
+    @Override
+    public void loadFromRemoteWithoutMerging() {
+
     }
 }
 

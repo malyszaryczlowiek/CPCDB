@@ -3,13 +3,14 @@ package com.github.malyszaryczlowiek.cpcdb.db;
 import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlags;
 import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlagsManager;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
+
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class ServiceReconnectionHandler implements ConnectionHandler
+class ServiceReconnectionHandler implements ConnectionHandler
 {
     @Override
     public Connection connect() {

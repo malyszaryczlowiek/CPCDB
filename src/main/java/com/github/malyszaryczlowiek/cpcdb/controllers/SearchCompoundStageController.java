@@ -43,8 +43,7 @@ public class SearchCompoundStageController implements Initializable
 
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
-    {
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         String[] listOfAccuracy = {"Is Exactly", "Is Containing"};
         List<String> list = Arrays.stream(listOfAccuracy).collect(Collectors.toList());
         ObservableList<String> observableList = FXCollections.observableList(list);
@@ -52,7 +51,6 @@ public class SearchCompoundStageController implements Initializable
         searchSmilesComboBox.setValue(listOfAccuracy[0]); // Is Exactly
         compoundNumberComboBox.setItems(observableList);
         compoundNumberComboBox.setValue(listOfAccuracy[1]);
-
 
         String[] beforeAfterArray = {"Before", "After"};
         List<String> beforeAfterList = Arrays.stream(beforeAfterArray).collect(Collectors.toList());
@@ -83,8 +81,7 @@ public class SearchCompoundStageController implements Initializable
     }
 
     @FXML
-    protected void onSearchButtonClicked(ActionEvent actionEvent)
-    {
+    protected void onSearchButtonClicked(ActionEvent actionEvent) {
         String smiles = searchSmiles.getText();
         String smilesAccuracy = searchSmilesComboBox.getValue();
         String compoundNumber = searchCompoundNumber.getText();
@@ -107,14 +104,12 @@ public class SearchCompoundStageController implements Initializable
     }
 
     @FXML
-    protected void onCancelButtonClicked(ActionEvent actionEvent)
-    {
+    protected void onCancelButtonClicked(ActionEvent actionEvent) {
         thisStage.close();
         actionEvent.consume();
     }
 
-    public void setMainStageControllerObject(MainStageController mainStageControllerObject)
-    {
+    public void setMainStageControllerObject(MainStageController mainStageControllerObject) {
         controller = mainStageControllerObject;
     }
 
@@ -126,12 +121,10 @@ public class SearchCompoundStageController implements Initializable
      */
 
     @FXML
-    protected void onDatePickerDateEdited()
-    {
+    protected void onDatePickerDateEdited() {
         LocalDate selectedDay = searchDatePicker.getValue();
 
-        if (selectedDay.isAfter(LocalDate.now()))
-        {
+        if (selectedDay.isAfter(LocalDate.now())) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setResizable(true);
 
@@ -146,8 +139,7 @@ public class SearchCompoundStageController implements Initializable
             searchDatePicker.setValue(selectedLocalDate);
             searchDatePicker.requestFocus();
         }
-        else
-        { // jeśli data jest dobra to przypisz tę datę
+        else { // jeśli data jest dobra to przypisz tę datę
             selectedLocalDate = searchDatePicker.getValue();
             searchArgonStability.requestFocus();
         }
@@ -161,8 +153,7 @@ public class SearchCompoundStageController implements Initializable
      */
 
 
-    public interface SearchingCriteriaChosenListener
-    {
+    public interface SearchingCriteriaChosenListener {
         void searchingCriteriaChosen(String smiles, String smilesAccuracy,
                                      String compoundNumber, String compoundNumberAccuracy,
                                      String form, String container, String storagePlace,

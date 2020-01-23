@@ -1,5 +1,6 @@
 package com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders;
 
+import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.controllers.MergingRemoteDbController;
 import com.github.malyszaryczlowiek.cpcdb.windows.ShowAble;
 
@@ -15,7 +16,7 @@ class MergingRemoteDbWindow implements ShowAble
 {
     private Stage mergeWindow;
 
-    MergingRemoteDbWindow() throws IOException {
+    MergingRemoteDbWindow(MainStageController mainStageController) throws IOException {
         mergeWindow = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("mergingRemoteDbStage.fxml"));
         Parent root = loader.load();
@@ -26,6 +27,7 @@ class MergingRemoteDbWindow implements ShowAble
         mergeWindow.setTitle("Merging Remote Database");
         mergeWindow.setResizable(false);
         controller.setStage(mergeWindow);
+        controller.setMainStageController(mainStageController);
     }
 
     @Override

@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
 public class MergingRemoteDbController implements Initializable
 {
     private Stage stage;
+    private MainStageController mainStageController;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -21,6 +22,10 @@ public class MergingRemoteDbController implements Initializable
         this.stage = stage;
     }
 
+    public void setMainStageController(MainStageController mainStageController) {
+        this.mainStageController = mainStageController;
+    }
+
     @FXML
     protected void onCancelButtonClicked(ActionEvent event) {
         stage.close();
@@ -28,12 +33,24 @@ public class MergingRemoteDbController implements Initializable
     }
 
     @FXML
-    protected void onLoadWithoutMergingClicked() {
-
+    protected void onLoadWithoutMergingClicked(ActionEvent event) {
+        Mergeable listener = mainStageController;
+        listener.loadFromRemoteWithoutMerging();
+        stage.close();
+        event.consume();
     }
 
+    // TODO tutaj trzeba zaimplementować aby uruchomił sie service który merguje
     @FXML
-    protected void onMergeButtonClicked() {
-        // TODO tutaj trzeba zaimplementować aby uruchomił sie service który merguje
+    protected void onMergeButtonClicked(ActionEvent event) {
+        Mergeable listener = mainStageController;
+        listener.mergeWithRemote();
+        stage.close();
+        event.consume();
+    }
+
+    public interface Mergeable {
+        void mergeWithRemote();
+        void loadFromRemoteWithoutMerging();
     }
 }

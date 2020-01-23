@@ -27,7 +27,7 @@ public class FXMain extends Application
         primaryStage.setResizable(true);
         primaryStage.sizeToScene();
         primaryStage.setMaximized(true);
-        controller.setStage(primaryStage); // tam jest ukryte primarystage.show()
+        controller.setStage(primaryStage); // there is hidden primaryStage.show()
 
         //primaryStage.setIconified(true);
         //primaryStage.setOnCloseRequest(e -> Platform.exit());
