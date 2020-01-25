@@ -16,7 +16,7 @@ public class LocalConnectionQueryBuilder extends ConnectionQueryBuilder
     }
     @Override
     void addConnectionConfigurations() {
-        if ( SecureProperties.hasProperty("localDBExists") && SecureProperties.getProperty("localDBExists").equals("true") )
+        //if ( SecureProperties.hasProperty("localDBExists") && SecureProperties.getProperty("localDBExists").equals("true") )
             urlBuilder.append(DBNAME); // dodaję nazwę bazy danych, nie nazwę tabeli
         if ( SecureProperties
                 .getProperty("settings.db.local.connectorConfiguration.useLocalConnectorServerSettings")

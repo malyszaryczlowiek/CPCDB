@@ -67,7 +67,6 @@ public class EditCompoundStageController implements Initializable
     @FXML
     protected void onDeleteCompoundClicked(ActionEvent event)
     {
-        // TODO info o zmienie będzie zapisane w głównym oknie
         listener.reloadTableAfterCompoundDeleting(compound);
         stage.close();
         event.consume();
@@ -112,7 +111,7 @@ public class EditCompoundStageController implements Initializable
             return; // kończymy funkcję
         }
         else
-            amount = Float.valueOf(amountString);
+            amount = Float.parseFloat(amountString);
 
         ChangesDetector changesDetector = new ChangesDetector();
 

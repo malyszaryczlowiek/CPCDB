@@ -100,8 +100,8 @@ public class MainStageController implements Initializable,
 
     @FXML private ProgressBar progressBar;
     @FXML private Text currentStatus;
-    private DoubleProperty progressValue;
 
+    private DoubleProperty progressValue;
     private boolean unblockingTask3 = false;
     private ChangesDetector changesDetector;
     private ColumnManager columnManager;
@@ -144,8 +144,7 @@ public class MainStageController implements Initializable,
             if ( !SecureProperties.hasProperty("column.width.Smiles") )
                 setWidthOfColumns();
             Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
-                    observableList, mainSceneTableView, progressBar, currentStatusManager);
-
+                    observableList, mainSceneTableView, progressBar, currentStatusManager, this);
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
             loadingDatabaseThread.start();
@@ -281,8 +280,8 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onMenuFilePreferencesClicked(ActionEvent event) {
-        event.consume();
         WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
+        event.consume();
     }
 
     // FILE -> Quit
@@ -363,16 +362,6 @@ public class MainStageController implements Initializable,
     @FXML
     protected void onMenuEditSelectAll() {
         mainSceneTableView.getSelectionModel().selectAll();
-        /*
-        ObservableList<Integer> lastSelectedCompounds = mainSceneTableView.getSelectionModel().getSelectedIndices();
-        int size = lastSelectedCompounds.size();
-        int[] selectedIndexes = new int[size];
-        int i = 0;
-        for (int index: lastSelectedCompounds) {
-            System.out.println("index: " + index);
-            selectedIndexes[i++] = index;
-        }
-         */
     }
 
     private void executeUndoRedo(Map<Integer, Compound> mapOfCompoundsToChangeInTableView, ActionType actionType) {
@@ -524,6 +513,10 @@ public class MainStageController implements Initializable,
         mainSceneTableView.refresh();
     }
 
+    /**
+     * method implemented from EditCompoundStageController.EditChangesStageListener interface
+     * @param compound Compound to delete
+     */
     @Override
     public void reloadTableAfterCompoundDeleting(Compound compound) {
         Map<Integer, Compound> compoundToDelete = new TreeMap<>();
@@ -685,8 +678,8 @@ public class MainStageController implements Initializable,
                 ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
             }
         }
-        if (text.equals("Connection to Remote Database Established"))
-        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,this,null);
+        //if (text.equals("Connection to Remote Database Established"))
+        //    WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,this,null);
         currentStatusManager.resetFont();
     }
 

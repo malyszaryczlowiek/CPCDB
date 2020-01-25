@@ -22,8 +22,7 @@ class ServiceReconnectionHandler implements ConnectionHandler
                     remoteConnectionQueryBuilder.getQuery(),
                     SecureProperties.getProperty("settings.db.remote.user"),
                     SecureProperties.getProperty("settings.db.remote.passphrase"));
-            if ( !SecureProperties.hasProperty("remoteDBExists") ) // if db does not exist, we must create it
-                new DatabaseAndTableCreator(CONNECTION, DBNAME, DatabaseLocation.REMOTE);
+            DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.REMOTE);
             ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
             ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, false);
             return CONNECTION;

@@ -5,6 +5,7 @@ import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlagsManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.TempStability;
 import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
+import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
@@ -12,6 +13,8 @@ import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowFactory;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowsEnum;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.ScheduledService;
@@ -37,10 +40,12 @@ public class LoadingDatabase extends Task<String>
     private ScheduledService<Void> databasePingService;
     private ProgressBar progressBar;
     private CurrentStatusManager currentStatusManager;
+    private MainStageController mainStageController;
 
     private LoadingDatabase(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
                             ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                            ProgressBar progressBar, CurrentStatusManager currentStatusManager) {
+                            ProgressBar progressBar, CurrentStatusManager currentStatusManager,
+                            MainStageController mainStageController) {
         lockProvider = LockProvider.getLockProvider();
         this.progressValue = progressValue;
         this.fullListOfCompounds = fullListOfCompounds;
@@ -48,19 +53,21 @@ public class LoadingDatabase extends Task<String>
         this.mainSceneTableView = mainSceneTableView;
         this.progressBar = progressBar;
         this.currentStatusManager = currentStatusManager;
+        this.mainStageController = mainStageController;
     }
 
     public static Task<String> getTask(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
                                        ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                                       ProgressBar progressBar, CurrentStatusManager currentStatusManager) {
+                                       ProgressBar progressBar, CurrentStatusManager currentStatusManager,
+                                       MainStageController mainStageController) {
         LoadingDatabase thisTask = new LoadingDatabase(progressValue, fullListOfCompounds, observableList,
-                mainSceneTableView, progressBar, currentStatusManager);
+                mainSceneTableView, progressBar, currentStatusManager, mainStageController);
         thisTask.setUpTaskListeners();
         return thisTask;
     }
 
     /**
-     * This method can be called only from the main JavaFX application thread
+     * This method is called only from the main JavaFX application thread
      */
     private void setUpTaskListeners() {
         this.messageProperty().addListener(
@@ -73,16 +80,19 @@ public class LoadingDatabase extends Task<String>
                 updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
                     switch (newValue2) {
                         case "connectionError":
-
+                            currentStatusManager.setCurrentStatus("Error cannot connect to local DB");
                             break;
                         case "incorrectPassphrase":
-
+                            //
+                            currentStatusManager.setCurrentStatus("Error incorrect local Db passphrase");
                             break;
                         case "updatingLocalDatabase":
-
+                            // tODO tutaj chyba nic nie trzeba bo to tylko info, że updatujemy
+                            currentStatusManager.resetFont();
+                            currentStatusManager.setCurrentStatus("Updating Local Database");
                             break;
                         case "UnknownError":
-
+                            currentStatusManager.setCurrentStatus("Unknown error");
                             break;
                         default:
                             break;
@@ -232,15 +242,16 @@ public class LoadingDatabase extends Task<String>
                         && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
         if ( showWarning )
             updateMessage("showWarning");
-        else
+        else{
             updateMessage("Data loaded, table refreshed");
-        stopThisThread(1);
-        updateTitle("updateLocalDb");
+            stopThisThread(1);
+            updateTitle("updateLocalDb");
+        }
         stopThisThread(100);
     }
 
     /**
-     * This method can be called only from the main JavaFX application thread
+     * This method is called only from the main JavaFX application thread
      */
     private void manageConnectingToDbCommunicates(String newString) {
         switch (newString) {
@@ -318,7 +329,7 @@ public class LoadingDatabase extends Task<String>
     }
 
     /**
-     * This method can be called only from the main JavaFX application thread
+     * This method is called only from the main JavaFX application thread
      */
     private void startService() {
         databasePingService = new ScheduledService<>()
@@ -337,12 +348,13 @@ public class LoadingDatabase extends Task<String>
                         return null;
                     }
                 };
-                task.messageProperty().addListener((observable, oldValue, newValue) -> {
+                task.messageProperty().addListener( (observable, oldValue, newValue) -> {
                     if (newValue.equals("connectionEstablished")) {
-                        currentStatusManager.setGreenFont();
+                        currentStatusManager.resetFont();
                         currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
                         databasePingService.cancel();
                         ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
+                        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW, mainStageController,null);
                     }
                 });
                 return task;
