@@ -40,7 +40,6 @@ public class MergingRemoteDbController implements Initializable
         event.consume();
     }
 
-    // TODO tutaj trzeba zaimplementować aby uruchomił sie service który merguje
     @FXML
     protected void onMergeButtonClicked(ActionEvent event) {
         Mergeable listener = mainStageController;

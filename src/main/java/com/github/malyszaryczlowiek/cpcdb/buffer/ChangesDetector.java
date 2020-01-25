@@ -69,7 +69,7 @@ public class ChangesDetector
 
 
     public void saveChangesToDatabase() {
-        try (Connection connection = ConnectionManager.connectToDb()) {
+        try (Connection connection = ConnectionManager.connectToAnyDb()) {
             // generujemy sublistę od początku zmian do momentu w którym znajduje się index
             List<CompoundChange> finalListOfChanges = listOfChanges.subList(0, index);
             CollectorOfChanges.collect(finalListOfChanges);

@@ -2,9 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="55224a0e-3af4-4940-9b44-11052409e10a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/LoadingDatabase.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/MergeRemoteDbWithLocal.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/UpdateLocalDb.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/buffer/ChangesDetector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/buffer/ChangesDetector.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MainStageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MainStageController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MergingRemoteDbController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/controllers/MergingRemoteDbController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/ConnectionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/ConnectionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/LocalConnectionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/db/LocalConnectionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/LoadingDatabase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/LoadingDatabase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/MergingWithRemote.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/github/malyszaryczlowiek/cpcdb/tasks/LoadDatabaseFromRemoteWithoutMerging.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/mergingRemoteDbStage.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/com/github/malyszaryczlowiek/cpcdb/windows/windowLoaders/mergingRemoteDbStage.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -379,7 +387,14 @@
       <option name="project" value="LOCAL" />
       <updated>1579811096955</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Rewritten main loading database Task.">
+      <created>1579897277639</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1579897277640</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -416,7 +431,8 @@
     <MESSAGE value="Asking to merge remote database window now showing. Merging not implemented. Windows and Alerts factory refactoring. Huge boring typing work." />
     <MESSAGE value="Added break statement to one case in WindowFactory. So reconnection and settings windows do not show simultaneously." />
     <MESSAGE value="Merging mechanism not implemented but in progress. Added merging task to MainController." />
-    <option name="LAST_COMMIT_MESSAGE" value="Merging mechanism not implemented but in progress. Added merging task to MainController." />
+    <MESSAGE value="Rewritten main loading database Task." />
+    <option name="LAST_COMMIT_MESSAGE" value="Rewritten main loading database Task." />
   </component>
   <component name="WindowStateProjectService">
     <state x="1921" y="198" width="800" height="684" key="#Notifications" timestamp="1578506780044">
@@ -431,11 +447,11 @@
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="2068" y="307" width="518" height="332" key="#com.intellij.ide.actions.ChooseComponentsToExportDialog/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579370494659" />
-    <state x="546" y="198" width="343" height="407" key="#com.intellij.ide.util.MemberChooser" timestamp="1579894984063">
-      <screen x="0" y="27" width="1366" height="741" />
+    <state x="2134" y="249" width="343" height="407" key="#com.intellij.ide.util.MemberChooser" timestamp="1579957921364">
+      <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="546" y="198" width="343" height="407" key="#com.intellij.ide.util.MemberChooser/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579894984063" />
-    <state x="2134" y="249" width="374" height="582" key="#com.intellij.ide.util.MemberChooser/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579807756742" />
+    <state x="2134" y="249" width="374" height="582" key="#com.intellij.ide.util.MemberChooser/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579957921364" />
     <state x="2167" y="428" width="308" height="223" key="#com.intellij.ide.util.projectWizard.JdkChooserPanel.MyDialog" timestamp="1578690899283">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
@@ -456,38 +472,39 @@
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="2059" y="285" width="524" height="509" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579025692352" />
-    <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2" timestamp="1579811096496">
+    <state x="2023" y="214" width="915" height="559" key="CommitChangelistDialog2" timestamp="1579897277485">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
+    <state x="2023" y="214" width="915" height="559" key="CommitChangelistDialog2/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897277485" />
     <state x="2067" y="167" width="777" height="814" key="CommitChangelistDialog2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579811096496" />
     <state x="2100" y="217" width="444" height="520" key="FileChooserDialogImpl" timestamp="1579370490422">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="2100" y="217" width="444" height="520" key="FileChooserDialogImpl/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579370490422" />
-    <state width="1874" height="152" key="GridCell.Tab.0.bottom" timestamp="1579897090394">
-      <screen x="0" y="27" width="1366" height="741" />
+    <state width="1874" height="167" key="GridCell.Tab.0.bottom" timestamp="1579963050637">
+      <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
-    <state width="1874" height="152" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897090394" />
-    <state width="1874" height="131" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579810930339" />
-    <state width="1874" height="152" key="GridCell.Tab.0.center" timestamp="1579897090393">
-      <screen x="0" y="27" width="1366" height="741" />
+    <state width="1874" height="152" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579900784257" />
+    <state width="1874" height="167" key="GridCell.Tab.0.bottom/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579963050637" />
+    <state width="1874" height="167" key="GridCell.Tab.0.center" timestamp="1579963050637">
+      <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
-    <state width="1874" height="152" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897090393" />
-    <state width="1874" height="131" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579810930339" />
-    <state width="1874" height="152" key="GridCell.Tab.0.left" timestamp="1579897090393">
-      <screen x="0" y="27" width="1366" height="741" />
+    <state width="1874" height="152" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579900784257" />
+    <state width="1874" height="167" key="GridCell.Tab.0.center/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579963050637" />
+    <state width="1874" height="167" key="GridCell.Tab.0.left" timestamp="1579963050637">
+      <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
-    <state width="1874" height="152" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897090393" />
-    <state width="1874" height="131" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579810930339" />
-    <state width="1874" height="152" key="GridCell.Tab.0.right" timestamp="1579897090394">
-      <screen x="0" y="27" width="1366" height="741" />
+    <state width="1874" height="152" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579900784257" />
+    <state width="1874" height="167" key="GridCell.Tab.0.left/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579963050637" />
+    <state width="1874" height="167" key="GridCell.Tab.0.right" timestamp="1579963050637">
+      <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state width="1320" height="62" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.707@0.27.1366.707" timestamp="1576189561746" />
-    <state width="1874" height="152" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897090394" />
-    <state width="1874" height="131" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579810930339" />
+    <state width="1874" height="152" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579900784257" />
+    <state width="1874" height="167" key="GridCell.Tab.0.right/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579963050637" />
     <state width="1874" height="193" key="GridCell.Tab.1.bottom" timestamp="1575306095309">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
@@ -516,15 +533,16 @@
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="1443" y="168" width="1682" height="737" key="SettingsEditor/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579034837764" />
-    <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1579811108233">
+    <state x="1930" y="346" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1579897292041">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
+    <state x="1930" y="346" key="Vcs.Push.Dialog.v2/1366.0.1920.1080/0.27.1366.741@0.27.1366.741" timestamp="1579897292041" />
     <state x="1921" y="272" width="800" height="535" key="Vcs.Push.Dialog.v2/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579811108233" />
-    <state x="1992" y="321" width="508" height="279" key="com.intellij.ide.util.TipDialog" timestamp="1579797189403">
+    <state x="1992" y="321" width="508" height="279" key="com.intellij.ide.util.TipDialog" timestamp="1579949408099">
       <screen x="1366" y="0" width="1920" height="1080" />
     </state>
     <state x="445" y="237" width="508" height="279" key="com.intellij.ide.util.TipDialog/0.27.1366.707@0.27.1366.707" timestamp="1576604100834" />
-    <state x="1992" y="321" width="688" height="425" key="com.intellij.ide.util.TipDialog/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579797189403" />
+    <state x="1992" y="321" width="688" height="425" key="com.intellij.ide.util.TipDialog/1366.0.1920.1080/0.27.1366.741@1366.0.1920.1080" timestamp="1579949408099" />
     <state x="336" y="27" width="683" height="707" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1576188255140">
       <screen x="0" y="27" width="1366" height="707" />
     </state>

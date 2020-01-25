@@ -9,10 +9,16 @@ import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 
+import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
+import javafx.util.Duration;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,25 +34,70 @@ public class LoadingDatabase extends Task<String>
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private TableView<Compound> mainSceneTableView;
+    private ScheduledService<Void> databasePingService;
+    private ProgressBar progressBar;
+    private CurrentStatusManager currentStatusManager;
 
     private LoadingDatabase(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                            ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView) {
+                            ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                            ProgressBar progressBar, CurrentStatusManager currentStatusManager) {
         lockProvider = LockProvider.getLockProvider();
         this.progressValue = progressValue;
         this.fullListOfCompounds = fullListOfCompounds;
         this.observableList = observableList;
         this.mainSceneTableView = mainSceneTableView;
+        this.progressBar = progressBar;
+        this.currentStatusManager = currentStatusManager;
     }
 
     public static Task<String> getTask(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                                       ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView) {
-        return new LoadingDatabase(progressValue, fullListOfCompounds, observableList, mainSceneTableView);
+                                       ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                                       ProgressBar progressBar, CurrentStatusManager currentStatusManager) {
+        LoadingDatabase thisTask = new LoadingDatabase(progressValue, fullListOfCompounds, observableList,
+                mainSceneTableView, progressBar, currentStatusManager);
+        thisTask.setUpTaskListeners();
+        return thisTask;
     }
 
+    /**
+     * This method can be called only from the main JavaFX application thread
+     */
+    private void setUpTaskListeners() {
+        this.messageProperty().addListener(
+                (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
+        this.valueProperty().addListener(
+                (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
+        this.titleProperty().addListener( (observable, oldValue, newValue) -> {
+            if ("updateLocalDb".equals(newValue)) {
+                Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
+                updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
+                    switch (newValue2) {
+                        case "connectionError":
+
+                            break;
+                        case "incorrectPassphrase":
+
+                            break;
+                        case "updatingLocalDatabase":
+
+                            break;
+                        case "UnknownError":
+
+                            break;
+                        default:
+                            break;
+                    }
+                });
+                Thread updateLocalDbThread = new Thread(updateLocalDbTask);
+                updateLocalDbThread.setDaemon(true);
+                updateLocalDbThread.start();
+            }
+        } );
+    }
 
     @Override
     protected String call() {
-        try (Connection connection = ConnectionManager.connectToDb()) {
+        try (Connection connection = ConnectionManager.connectToAnyDb()) {
             // not working on any copy
             if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
                     && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
@@ -184,6 +235,121 @@ public class LoadingDatabase extends Task<String>
         else
             updateMessage("Data loaded, table refreshed");
         stopThisThread(1);
+        updateTitle("updateLocalDb");
+        stopThisThread(100);
+    }
+
+    /**
+     * This method can be called only from the main JavaFX application thread
+     */
+    private void manageConnectingToDbCommunicates(String newString) {
+        switch (newString) {
+            case "cannotConnectToAllDB":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "cannotConnectToRemoteDB":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
+                startService();
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemoteAndLocalPassphrase":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Error (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "incorrectRemotePassphrase":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    currentStatusManager.setCurrentStatus("Warning (click here for more info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "showWarning":
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setWarningMessage("Data loaded. Warning (click here for info)");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            case "UnknownErrorOccurred":
+                ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(0.0);
+                    currentStatusManager.setErrorMessage("Unknown Error Occurred");
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+            default:  // correct data loading
+                currentStatusManager.setCurrentStatus(newString);
+                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
+                    progressBar.setProgress(progressValue.doubleValue());
+                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
+                }
+                break;
+        }
+    }
+
+    /**
+     * This method can be called only from the main JavaFX application thread
+     */
+    private void startService() {
+        databasePingService = new ScheduledService<>()
+        {
+            @Override
+            protected Task<Void> createTask() {
+                Task<Void> task = new Task<>() {
+                    @Override
+                    protected Void call() {
+                        try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
+                            if (connection != null)
+                                updateMessage("connectionEstablished");
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
+                task.messageProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue.equals("connectionEstablished")) {
+                        currentStatusManager.setGreenFont();
+                        currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
+                        databasePingService.cancel();
+                        ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
+                    }
+                });
+                return task;
+            }
+        };
+        databasePingService.setPeriod(Duration.seconds(3));
+        databasePingService.start();
     }
 }
 

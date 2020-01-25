@@ -20,6 +20,8 @@ public class LocalConnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.local.passphrase"));
             if ( !SecureProperties.hasProperty("localDBExists") ) // if db does not exist, we must create it
                 new DatabaseAndTableCreator(CONNECTION, DBNAME, DatabaseLocation.LOCAL);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR, false);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR, false);
             return CONNECTION;
         }
         catch ( CommunicationsException e) { // CJCommunicationsException |

@@ -1,7 +1,8 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadingDatabase;
-import com.github.malyszaryczlowiek.cpcdb.tasks.MergingWithRemote;
+import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
+import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
@@ -9,7 +10,6 @@ import com.github.malyszaryczlowiek.cpcdb.buffer.ChangesDetector;
 import com.github.malyszaryczlowiek.cpcdb.initializers.*;
 import com.github.malyszaryczlowiek.cpcdb.managers.ColumnManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.*;
-import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
@@ -24,7 +24,6 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -32,12 +31,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -111,7 +108,6 @@ public class MainStageController implements Initializable,
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
-    private ScheduledService<Void> databasePingService;
 
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
@@ -148,13 +144,7 @@ public class MainStageController implements Initializable,
             if ( !SecureProperties.hasProperty("column.width.Smiles") )
                 setWidthOfColumns();
             Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
-                    observableList, mainSceneTableView);
-            loadingDatabaseTask.messageProperty().addListener(
-                    (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
-
-            loadingDatabaseTask.valueProperty().addListener(
-                    (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
-
+                    observableList, mainSceneTableView, progressBar, currentStatusManager);
 
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
@@ -700,6 +690,83 @@ public class MainStageController implements Initializable,
         currentStatusManager.resetFont();
     }
 
+    /**
+     * From interface MergingRemoteDbController.Mergeable
+     */
+    @Override
+    public void mergeWithRemote() {
+        Task<Void> mergingTask = MergeRemoteDbWithLocal.getTask(progressValue);
+        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
+                currentStatusManager.setCurrentStatus(newMessage)
+        );
+        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
+                progressBar.setProgress((Double) newValue)
+        );
+        Thread mergingThread = new Thread(mergingTask);
+        mergingThread.setDaemon(true);
+        mergingThread.start();
+    }
+
+    /**
+     * From interface MergingRemoteDbController.Mergeable
+     */
+    @Override
+    public void loadFromRemoteWithoutMerging() {
+        Task<Void> mergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(progressValue, fullListOfCompounds,
+                observableList, mainSceneTableView);
+        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
+                currentStatusManager.setCurrentStatus(newMessage)
+        );
+        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
+                progressBar.setProgress((Double) newValue)
+        );
+        Thread mergingThread = new Thread(mergingTask);
+        mergingThread.setDaemon(true);
+        mergingThread.start();
+    }
+}
+
+
+
+
+
+
+
+            /*
+            loadingDatabaseTask.messageProperty().addListener(
+                    (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
+            loadingDatabaseTask.valueProperty().addListener(
+                    (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
+            loadingDatabaseTask.titleProperty().addListener( (observable, oldValue, newValue) -> {
+                if ("updateLocalDb".equals(newValue)) {
+                    Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
+                    updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
+                        switch (newValue2) {
+                            case "connectionError":
+
+                                break;
+                            case "incorrectPassphrase":
+
+                                break;
+                            case "updatingLocalDatabase":
+
+                                break;
+                            case "UnknownError":
+
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+                    Thread updateLocalDbThread = new Thread(updateLocalDbTask);
+                    updateLocalDbThread.setDaemon(true);
+                    updateLocalDbThread.start();
+                }
+            } );
+             */
+
+
+   /*
     private void startService() {
         databasePingService = new ScheduledService<>()
         {
@@ -806,36 +873,7 @@ public class MainStageController implements Initializable,
                 break;
         }
     }
-
-
-    /**
-     * From interface MergingRemoteDbController.Mergeable
-     */
-    @Override
-    public void mergeWithRemote() {
-        Task<Void> mergingTask = MergingWithRemote.getTask(progressValue);
-        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
-            currentStatusManager.setCurrentStatus(newMessage)
-        );
-        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
-            progressBar.setProgress((Double) newValue)
-        );
-        Thread mergingThread = new Thread(mergingTask);
-        mergingThread.setDaemon(true);
-        mergingThread.start();
-    }
-
-    /**
-     * From interface MergingRemoteDbController.Mergeable
-     */
-    @Override
-    public void loadFromRemoteWithoutMerging() {
-
-    }
-}
-
-
-
+*/
 
 
 

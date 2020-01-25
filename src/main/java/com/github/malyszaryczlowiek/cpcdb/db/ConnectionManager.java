@@ -4,7 +4,7 @@ import java.sql.Connection;
 
 public class ConnectionManager
 {
-    public static Connection connectToDb(){
+    public static Connection connectToAnyDb(){
         ConnectionHandler handler = new RemoteConnectionHandler();
         return handler.connect();
     }
@@ -13,7 +13,15 @@ public class ConnectionManager
         ConnectionHandler handler = new ServiceReconnectionHandler();
         return handler.connect();
     }
+
+    public static Connection connectToLocalDb() {
+        ConnectionHandler handler = new LocalConnectionHandler();
+        return handler.connect();
+    }
 }
+
+
+
 /*
 sudo service mysql status
 sudo service mysql stop
