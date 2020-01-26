@@ -9,12 +9,10 @@ import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
-
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
-import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowFactory;
-import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowsEnum;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.ScheduledService;
@@ -37,7 +35,6 @@ public class LoadingDatabase extends Task<String>
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private TableView<Compound> mainSceneTableView;
-    private ScheduledService<Void> databasePingService;
     private ProgressBar progressBar;
     private CurrentStatusManager currentStatusManager;
     private MainStageController mainStageController;
@@ -83,7 +80,6 @@ public class LoadingDatabase extends Task<String>
                             currentStatusManager.setCurrentStatus("Error cannot connect to local DB");
                             break;
                         case "incorrectPassphrase":
-                            //
                             currentStatusManager.setCurrentStatus("Error incorrect local Db passphrase");
                             break;
                         case "updatingLocalDatabase":
@@ -332,34 +328,7 @@ public class LoadingDatabase extends Task<String>
      * This method is called only from the main JavaFX application thread
      */
     private void startService() {
-        databasePingService = new ScheduledService<>()
-        {
-            @Override
-            protected Task<Void> createTask() {
-                Task<Void> task = new Task<>() {
-                    @Override
-                    protected Void call() {
-                        try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-                            if (connection != null)
-                                updateMessage("connectionEstablished");
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        return null;
-                    }
-                };
-                task.messageProperty().addListener( (observable, oldValue, newValue) -> {
-                    if (newValue.equals("connectionEstablished")) {
-                        currentStatusManager.resetFont();
-                        currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
-                        databasePingService.cancel();
-                        ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
-                        WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW, mainStageController,null);
-                    }
-                });
-                return task;
-            }
-        };
+        ScheduledService<Void> databasePingService = PingService.getService(mainStageController);
         databasePingService.setPeriod(Duration.seconds(3));
         databasePingService.start();
     }

@@ -9,9 +9,22 @@ import javafx.scene.text.Text;
 public class CurrentStatusManager
 {
     private static Text currentStatus;
+    //private CurrentStatusManager thisCurrentStatusManager;
 
-    public CurrentStatusManager(Text status) {
-        currentStatus = status;
+    public static CurrentStatusManager getThisCurrentStatusManager() throws NullPointerException {
+        if (currentStatus == null)
+            throw new NullPointerException("You must set Text object first. Call getThisCurrentStatusManager(Text text) method instead.");
+        else
+            return new CurrentStatusManager();
+    }
+
+    public static CurrentStatusManager getThisCurrentStatusManager(Text status)  {
+        if (currentStatus == null)
+            currentStatus = status;
+        return new CurrentStatusManager();
+    }
+
+    private CurrentStatusManager() {
     }
 
     /*
@@ -41,9 +54,11 @@ public class CurrentStatusManager
         currentStatus.setFill(Paint.valueOf("black"));
     }
 
+    /*
     public void setGreenFont() {
         currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
         currentStatus.setFont(Font.getDefault());
         currentStatus.setFill(Paint.valueOf("green"));
     }
+     */
 }

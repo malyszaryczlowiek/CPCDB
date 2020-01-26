@@ -89,7 +89,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
             synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
                 progressValue.setValue( progressValue.get() + 0.1);
             }
-            updateMessage("Downloading data from server");
+            updateMessage("Downloading data from Remote Server");
             updateProgress(0.05, 1.0);
             stopThisThread(1);
             ResultSet resultSet = loadDBStatement.executeQuery();
@@ -126,7 +126,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
                     stopThisThread(1);
                 }
             }
-            updateMessage("Refreshing table");
+            updateMessage("Refreshing Table");
             stopThisThread(1);
             observableList.setAll(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
@@ -135,7 +135,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
             e.printStackTrace();
         }
         updateProgress(0.0,1.0);
-        updateMessage("Reloading Remote Server Database done");
+        updateMessage("Reloading Remote Server Database Done");
         stopThisThread(2);
     }
 }

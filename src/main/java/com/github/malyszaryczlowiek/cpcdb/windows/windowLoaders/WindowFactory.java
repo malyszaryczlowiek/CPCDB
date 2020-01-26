@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class WindowFactory
 {
-    public static void showWindow(WindowsEnum windowsEnum, MainStageController mainStageController, Compound compoundToEdition ) {
+    public static void showWindow(WindowsEnum windowsEnum, MainStageController mainStageController, Compound compoundToOperateWith ) {
         try {
             switch (windowsEnum) {
                 case ADD_COMPOUND_WINDOW:
@@ -17,7 +17,7 @@ public class WindowFactory
                     new ColumnManagerWindow().show();
                     break;
                 case EDIT_COMPOUND_WINDOW:
-                    new EditCompoundWindow(mainStageController, compoundToEdition).show();
+                    new EditCompoundWindow(mainStageController, compoundToOperateWith).show();
                     break;
                 case INITIALIZING_DB_PROPERTIES_WINDOW:
                     new InitializingDBPropertiesWindow().show();

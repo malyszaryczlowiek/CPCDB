@@ -128,7 +128,7 @@ public class MainStageController implements Initializable,
 
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
-            currentStatusManager = new CurrentStatusManager(currentStatus);
+            currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
             changesDetector = new ChangesDetector();
             lockProvider = LockProvider.getLockProvider();
@@ -514,7 +514,7 @@ public class MainStageController implements Initializable,
     }
 
     /**
-     * method implemented from EditCompoundStageController.EditChangesStageListener interface
+     * Method implemented from EditCompoundStageController.EditChangesStageListener interface
      * @param compound Compound to delete
      */
     @Override
@@ -718,160 +718,6 @@ public class MainStageController implements Initializable,
         mergingThread.start();
     }
 }
-
-
-
-
-
-
-
-            /*
-            loadingDatabaseTask.messageProperty().addListener(
-                    (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
-            loadingDatabaseTask.valueProperty().addListener(
-                    (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
-            loadingDatabaseTask.titleProperty().addListener( (observable, oldValue, newValue) -> {
-                if ("updateLocalDb".equals(newValue)) {
-                    Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
-                    updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
-                        switch (newValue2) {
-                            case "connectionError":
-
-                                break;
-                            case "incorrectPassphrase":
-
-                                break;
-                            case "updatingLocalDatabase":
-
-                                break;
-                            case "UnknownError":
-
-                                break;
-                            default:
-                                break;
-                        }
-                    });
-                    Thread updateLocalDbThread = new Thread(updateLocalDbTask);
-                    updateLocalDbThread.setDaemon(true);
-                    updateLocalDbThread.start();
-                }
-            } );
-             */
-
-
-   /*
-    private void startService() {
-        databasePingService = new ScheduledService<>()
-        {
-            @Override
-            protected Task<Void> createTask() {
-                Task<Void> task = new Task<>() {
-                    @Override
-                    protected Void call() {
-                        try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-                            if (connection != null)
-                                updateMessage("connectionEstablished");
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        return null;
-                    }
-                };
-                task.messageProperty().addListener((observable, oldValue, newValue) -> {
-                    if (newValue.equals("connectionEstablished")) {
-                        currentStatusManager.setGreenFont();
-                        currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
-                        databasePingService.cancel();
-                        ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
-                    }
-                });
-                return task;
-            }
-        };
-        databasePingService.setPeriod(Duration.seconds(3));
-        databasePingService.start();
-    }
-
-    private void manageConnectingToDbCommunicates(String newString) {
-        switch (newString) {
-            case "cannotConnectToAllDB":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
-                startService();
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
-                startService();
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "cannotConnectToRemoteDB":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
-                startService();
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "incorrectRemoteAndLocalPassphrase":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setErrorMessage("Error (click here for more info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "incorrectRemotePassphrase":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    currentStatusManager.setCurrentStatus("Warning (click here for more info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "showWarning":
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setWarningMessage("Data loaded. Warning (click here for info)");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            case "UnknownErrorOccurred":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(0.0);
-                    currentStatusManager.setErrorMessage("Unknown Error Occurred");
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-            default:  // correct data loading
-                currentStatusManager.setCurrentStatus(newString);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressBar.setProgress(progressValue.doubleValue());
-                    lockProvider.getLock(LockTypes.PROGRESS_VALUE).notifyAll();
-                }
-                break;
-        }
-    }
-*/
-
-
-
-
-
 
 
 
