@@ -33,6 +33,12 @@ public class ShortAlertWindowFactory
             case NOT_FOUND_COMPOUND:
                 new NotFoundCompound(Alert.AlertType.INFORMATION).show();
                 break;
+            case CANNOT_CONNECT_TO_LOCAL_DB:
+                new UpdatingErrorCannotConnectToDb(Alert.AlertType.ERROR).show();
+                break;
+            case INCORRECT_LOCAL_DB_AUTHORISATION:
+                new IncorrectLocalDbAuthorisation(Alert.AlertType.ERROR).show();
+                break;
             default:
                 break;
         }

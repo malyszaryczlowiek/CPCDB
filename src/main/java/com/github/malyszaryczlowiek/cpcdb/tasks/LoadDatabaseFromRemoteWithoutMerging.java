@@ -135,7 +135,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
             e.printStackTrace();
         }
         updateProgress(0.0,1.0);
-        updateMessage("Reloading Remote Server Database Done");
+        updateTitle("Reloading Remote Server Database Done");
         stopThisThread(2);
     }
 }

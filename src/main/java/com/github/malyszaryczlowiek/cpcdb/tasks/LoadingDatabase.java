@@ -10,6 +10,7 @@ import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
+import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 
@@ -77,18 +78,22 @@ public class LoadingDatabase extends Task<String>
                 updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
                     switch (newValue2) {
                         case "connectionError":
-                            currentStatusManager.setCurrentStatus("Error cannot connect to local DB");
+                            if (SecureProperties.getProperty("localDBExists").equals("true")) {
+                                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
+                                currentStatusManager.setErrorMessage("Error, Cannot Connect to Local Database");
+                            }
                             break;
                         case "incorrectPassphrase":
-                            currentStatusManager.setCurrentStatus("Error incorrect local Db passphrase");
+                            ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
+                            currentStatusManager.setCurrentStatus("Error, Incorrect Local Database Authorisation");
                             break;
                         case "updatingLocalDatabase":
-                            // tODO tutaj chyba nic nie trzeba bo to tylko info, że updatujemy
                             currentStatusManager.resetFont();
                             currentStatusManager.setCurrentStatus("Updating Local Database");
                             break;
                         case "UnknownError":
-                            currentStatusManager.setCurrentStatus("Unknown error");
+                            ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                            currentStatusManager.setCurrentStatus("Unknown Error");
                             break;
                         default:
                             break;
@@ -340,172 +345,3 @@ public class LoadingDatabase extends Task<String>
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            /*
-            Task<String> loadingDatabaseTask = new Task<>()
-            {
-                @Override
-                protected String call()  {
-                        try (Connection connection = ConnectionManager.connectToDb()) {
-                            // not working on any copy
-                            if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                                updateValue("cannotConnectToAllDB");
-                                // not working on any copy
-                            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                                updateValue("cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase");
-                                // working on local copy
-                            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                                    && connection != null ) {
-                                updateValue("cannotConnectToRemoteDB");
-                                stopThisThread(50);
-                                loadTable(connection);
-                            }
-                            // not working on any copy
-                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                                updateValue("incorrectRemotePassphraseAndCannotConnectToLocalDatabase");
-                                // not working on any copy
-                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                                updateValue("incorrectRemoteAndLocalPassphrase");
-                                // working on local copy
-                            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                                    && connection != null) {
-                                updateValue("incorrectRemotePassphrase");
-                                stopThisThread(50);
-                                loadTable(connection);
-                            } // all working ok
-                            else if (connection != null //)
-                                    && ErrorFlagsManager.getMapOfErrors().values().stream().noneMatch(value -> value) )
-                                loadTable(connection);
-                            else
-                                updateMessage("UnknownErrorOccurred");
-                        }
-                        catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        return null;
-                    }
-
-                private void stopThisThread(int milliseconds) {
-                    try {
-                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                            lockProvider.getLock(LockTypes.PROGRESS_VALUE).wait(milliseconds);
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                private void loadTable(Connection connection)  {
-                    updateMessage("Connecting to Database");
-                    stopThisThread(1);
-                    final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
-                    int size = 0;
-                    try {
-                        PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
-                        ResultSet resultSet = loadDBStatement.executeQuery();
-                        while (resultSet.next())
-                            size = resultSet.getInt(1); // getting number of rows
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    final String loadDBSQLQuery = "SELECT * FROM compounds";
-                    try {
-                        PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
-                        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                            progressValue.setValue( progressValue.get() + 0.1);
-                        }
-                        updateMessage("Downloading data from server");
-                        stopThisThread(1);
-                        ResultSet resultSet = loadDBStatement.executeQuery();
-                        updateMessage("Loading downloaded data");
-                        stopThisThread(1);
-                        int index = 0;
-                        while(resultSet.next()) {
-                            int id = resultSet.getInt(1);
-                            String smiles = resultSet.getString(2);
-                            String compoundName = resultSet.getString(3);
-                            float amount = resultSet.getFloat(4);
-                            String unit = resultSet.getString(5);
-                            String form = resultSet.getString(6);
-                            String tempStability = resultSet.getString(7);
-                            boolean argon = resultSet.getBoolean(8);
-                            String container = resultSet.getString(9);
-                            String storagePlace = resultSet.getString(10);
-                            LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
-                            String additionalInformation = resultSet.getString(12);
-                            Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
-                                    form, TempStability.stringToEnum(tempStability), argon, container,
-                                    storagePlace, dateTimeModification, additionalInformation);
-                            compound.setId(id);
-                            compound.setSavedInDatabase(true);
-                            fullListOfCompounds.add(compound);
-                            try {
-                                Thread.sleep(0);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
-                            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                                progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
-                            }
-                            if (index % 100 == 0) {
-                                updateMessage("Loaded " + loadedPercentage + "%");
-                                stopThisThread(1);
-                            }
-                        }
-                        updateMessage("Refreshing table");
-                        stopThisThread(1);
-                        observableList.setAll(fullListOfCompounds);
-                        mainSceneTableView.setItems(observableList);
-                    }
-                    catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                        progressValue.setValue(0.0);
-                    }
-                    boolean showWarning = ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                            && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                            && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                            ||
-                            ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
-                    if ( showWarning )
-                        updateMessage("showWarning");
-                    else
-                        updateMessage("Data loaded, table refreshed");
-                    stopThisThread(1);
-                    demonTimer.stopTimer("stopping demon timer");
-                }
-            };
-*/

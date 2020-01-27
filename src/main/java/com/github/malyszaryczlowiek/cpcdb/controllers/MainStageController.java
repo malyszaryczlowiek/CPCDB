@@ -3,6 +3,7 @@ package com.github.malyszaryczlowiek.cpcdb.controllers;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadingDatabase;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
 import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
+import com.github.malyszaryczlowiek.cpcdb.tasks.UpdateLocalDb;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
@@ -713,6 +714,15 @@ public class MainStageController implements Initializable,
         mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
                 progressBar.setProgress((Double) newValue)
         );
+        mergingTask.titleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals("Reloading Remote Server Database Done")){
+                currentStatusManager.setCurrentStatus("Reloading Remote Server Database Done");
+                Task<Void> updatingTask = UpdateLocalDb.getTask(observableList);
+                Thread updatingLocalDbThread = new Thread(updatingTask);
+                updatingLocalDbThread.setDaemon(true);
+                updatingLocalDbThread.start();
+            }
+        });
         Thread mergingThread = new Thread(mergingTask);
         mergingThread.setDaemon(true);
         mergingThread.start();
