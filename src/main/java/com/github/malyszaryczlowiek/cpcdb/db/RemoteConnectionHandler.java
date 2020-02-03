@@ -21,6 +21,7 @@ class RemoteConnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.remote.user"),
                     SecureProperties.getProperty("settings.db.remote.passphrase"));
             DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.REMOTE);
+            SecureProperties.setProperty("remoteDBExists", "true");
             return CONNECTION;
         }
         catch ( CommunicationsException e) { //CJCommunicationsException |

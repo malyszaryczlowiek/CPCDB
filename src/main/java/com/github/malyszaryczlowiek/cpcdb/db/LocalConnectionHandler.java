@@ -26,6 +26,7 @@ public class LocalConnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.local.passphrase"));
             ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR, false);
             ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR, false);
+            SecureProperties.setProperty("localDBExists", "true");
             return CONNECTION;
         }
         catch ( CommunicationsException e) { // CJCommunicationsException |

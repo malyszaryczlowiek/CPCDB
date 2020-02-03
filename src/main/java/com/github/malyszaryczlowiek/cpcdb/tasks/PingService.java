@@ -50,9 +50,6 @@ public class PingService extends ScheduledService<Void>
                 thisService.cancel();
                 ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
                 WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW, mainStageController,null);
-
-                // Updating local database.
-
             }
         });
         return task;

@@ -1,7 +1,5 @@
 package com.github.malyszaryczlowiek.cpcdb.db;
 
-import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,7 +19,6 @@ class DatabaseAndTableCreator
                 "WHERE table_schema = '" + ConnectionHandler.DBNAME + "' " +
                 "AND table_name = 'compounds' " +
                 "LIMIT 10";
-
         PreparedStatement checkTableExists = CONNECTION.prepareStatement( checkIfTableExistsInDBSqlQuery );
         ResultSet rs = checkTableExists.executeQuery();
         if (!rs.last()) { // jeśli nie istnieje stwórz tabelę
@@ -62,13 +59,8 @@ class DatabaseAndTableCreator
                         "PRIMARY KEY (CompoundID)" +
                         ")";
             }
-
             PreparedStatement createTable = CONNECTION.prepareStatement(sqlQueryCreateTable);
             createTable.execute();
-            if (location.equals(DatabaseLocation.REMOTE))
-                SecureProperties.setProperty("remoteDBExists", "true");
-            else
-                SecureProperties.setProperty("localDBExists", "true");
         }
     }
 }

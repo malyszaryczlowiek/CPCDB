@@ -10,7 +10,6 @@ import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
-import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 
@@ -75,35 +74,11 @@ public class LoadingDatabase extends Task<String>
         this.titleProperty().addListener( (observable, oldValue, newValue) -> {
             if ("updateLocalDb".equals(newValue)) {
                 Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
-                updateLocalDbTask.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
-                    switch (newValue2) {
-                        case "connectionError":
-                            if (SecureProperties.getProperty("localDBExists").equals("true")) {
-                                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
-                                currentStatusManager.setErrorMessage("Error, Cannot Connect to Local Database");
-                            }
-                            break;
-                        case "incorrectPassphrase":
-                            ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
-                            currentStatusManager.setCurrentStatus("Error, Incorrect Local Database Authorisation");
-                            break;
-                        case "updatingLocalDatabase":
-                            currentStatusManager.resetFont();
-                            currentStatusManager.setCurrentStatus("Updating Local Database");
-                            break;
-                        case "UnknownError":
-                            ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
-                            currentStatusManager.setCurrentStatus("Unknown Error");
-                            break;
-                        default:
-                            break;
-                    }
-                });
                 Thread updateLocalDbThread = new Thread(updateLocalDbTask);
                 updateLocalDbThread.setDaemon(true);
                 updateLocalDbThread.start();
             }
-        } );
+        });
     }
 
     @Override
@@ -243,12 +218,11 @@ public class LoadingDatabase extends Task<String>
                         && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
         if ( showWarning )
             updateMessage("showWarning");
-        else{
+        else {
             updateMessage("Data loaded, table refreshed");
-            stopThisThread(1);
+            stopThisThread(100);
             updateTitle("updateLocalDb");
         }
-        stopThisThread(100);
     }
 
     /**

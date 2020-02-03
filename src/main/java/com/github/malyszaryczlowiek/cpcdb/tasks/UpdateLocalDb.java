@@ -4,6 +4,9 @@ import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlags;
 import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlagsManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
+import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -16,7 +19,39 @@ public class UpdateLocalDb extends Task<Void>
     private ObservableList<Compound> observableList;
 
     public static Task<Void> getTask(ObservableList<Compound> observableList) {
-        return new UpdateLocalDb(observableList);
+        UpdateLocalDb updateLocalDb = new UpdateLocalDb(observableList);
+        updateLocalDb.setUpTaskListeners();
+        return updateLocalDb;
+    }
+
+    private void setUpTaskListeners() {
+        this.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
+            CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+            switch (newValue2) {
+                case "connectionError":
+                    ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
+                    currentStatusManager.setErrorMessage("Error, Cannot Connect to Local Database");
+                    break;
+                case "incorrectPassphrase":
+                    ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
+                    currentStatusManager.setCurrentStatus("Error, Incorrect Local Database Authorisation");
+                    break;
+                case "updatingLocalDatabase":
+                    currentStatusManager.resetFont();
+                    currentStatusManager.setCurrentStatus("Updating Local Database");
+                    break;
+                case "localDbUpdated":
+                    currentStatusManager.resetFont();
+                    currentStatusManager.setCurrentStatus("Local Database Updated");
+                    break;
+                case "UnknownError":
+                    ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                    currentStatusManager.setCurrentStatus("Unknown Error");
+                    break;
+                default:
+                    break;
+            }
+        });
     }
 
     private UpdateLocalDb(ObservableList<Compound> observableList) {
@@ -102,5 +137,7 @@ public class UpdateLocalDb extends Task<Void>
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        updateMessage("localDbUpdated");
+        System.out.println("Local Db updated");
     }
 }
