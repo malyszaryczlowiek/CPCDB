@@ -18,7 +18,11 @@ public class LocalConnectionHandler implements ConnectionHandler
                     localConnectionQueryBuilder.getQuery(),
                     SecureProperties.getProperty("settings.db.local.user"),
                     SecureProperties.getProperty("settings.db.local.passphrase"));
-            DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.LOCAL);
+            DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.LOCAL); // TODO Trzeba napisać buildera który nie zawiera nazwy bazy danych bo
+            // jeśli wywołamy get connection z nazwą bazy danych a tej bazy nie ma to wywala wyjątek: java.sql.SQLSyntaxErrorException: Unknown database 'Wa1s8JBvyU'
+            // i omija powyższą linijkę: DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.LOCAL);
+            // można ją przenieść do catch tam wywołać connection ale z nowym builderem, który nie zaiera nazwy
+            // ale ma polecenie sqla które stworzy tę bazę. po czym zwrócimy już connection ze stworzoną bazą danych.
             CONNECTION.close();
             CONNECTION = DriverManager.getConnection(
                     localConnectionQueryBuilder.getQuery(),

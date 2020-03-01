@@ -12,7 +12,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.ComboBoxTableCell;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,15 +43,8 @@ public class TemperatureStabilityColumnInitializer extends ColumnInitializer imp
                     String newStability = event.getNewValue();
                     int row = position.getRow();
                     Compound compound = event.getTableView().getItems().get(row);
-                    if ( !TempStability.stringToEnum(newStability).equals(compound.getTempStability()) ) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.TEMPSTABILITY, newStability);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if ( !TempStability.stringToEnum(newStability).equals(compound.getTempStability()) )
+                        saveChangeToBufferExecutor(compound, Field.TEMPSTABILITY, newStability);
                 });
         tempStabilityCol.setPrefWidth( Double.parseDouble( SecureProperties.getProperty("column.width.TemperatureStability") ));
         boolean tempStab =  "true".equals(SecureProperties.getProperty("column.show.TemperatureStability"));

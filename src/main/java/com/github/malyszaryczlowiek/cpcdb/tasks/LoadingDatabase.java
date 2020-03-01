@@ -165,6 +165,8 @@ public class LoadingDatabase extends Task<String>
             updateMessage("Loading downloaded data");
             stopThisThread(1);
             int index = 0;
+            //fullListOfCompounds.clear();
+            //observableList.clear();
             while(resultSet.next()) {
                 int id = resultSet.getInt(1);
                 String smiles = resultSet.getString(2);

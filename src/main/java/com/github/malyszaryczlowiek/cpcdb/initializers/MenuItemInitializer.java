@@ -12,9 +12,10 @@ public class MenuItemInitializer
         menuItems[3].setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+S")); // S from search ;
         menuItems[4].setAccelerator(KeyCombination.keyCombination("Ctrl+P")); // P from preferences ;
         menuItems[5].setAccelerator(KeyCombination.keyCombination("Ctrl+Q")); // q from quit ;
-        menuItems[6].setAccelerator(KeyCombination.keyCombination("Ctrl+E")); ;
+        menuItems[6].setAccelerator(KeyCombination.keyCombination("Ctrl+E"));
         menuItems[7].setAccelerator(KeyCombination.keyCombination("Ctrl+F"));
         menuItems[8].setAccelerator(KeyCombination.keyCombination("Ctrl+H"));
+        menuItems[9].setAccelerator(KeyCombination.keyCombination("Ctrl+Shift+R"));
         //menuEditUndo.setAccelerator(KeyCombination.keyCombination("Ctrl+U"));
         //menuEditRedo.setAccelerator(KeyCombination.keyCombination("Ctrl+N"));
     }

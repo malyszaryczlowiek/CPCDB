@@ -67,7 +67,9 @@ public class ChangesDetector
 
 
 
-
+    /*
+    TODO to trzeba przenieś  do oddzielnego taska
+     */
     public void saveChangesToDatabase() {
         try (Connection connection = ConnectionManager.connectToAnyDb()) {
             // generujemy sublistę od początku zmian do momentu w którym znajduje się index

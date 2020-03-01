@@ -30,15 +30,8 @@ public class ContainerColumnInitializer extends ColumnInitializer implements Ini
                     String newContainer = event.getNewValue();
                     int row = position.getRow();
                     Compound compound = event.getTableView().getItems().get(row);
-                    if (!newContainer.equals(compound.getContainer())) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.CONTAINER, newContainer);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if (!newContainer.equals(compound.getContainer()))
+                        saveChangeToBufferExecutor(compound, Field.CONTAINER, newContainer);
                 });
         containerCol.setPrefWidth( Double.parseDouble( SecureProperties.getProperty("column.width.Container") ));
         boolean container =  "true".equals(SecureProperties.getProperty("column.show.Container"));

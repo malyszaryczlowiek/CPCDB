@@ -4,13 +4,12 @@ import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.FloatNumberFormat
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.TextFieldTableCell;
-
-import java.io.IOException;
 
 public class AmountColumnInitializer extends ColumnInitializer implements Initializable
 {
@@ -38,15 +37,8 @@ public class AmountColumnInitializer extends ColumnInitializer implements Initia
                     Float f;
                     try {
                         f = Float.valueOf(newValue);
-                        if (!f.equals(compound.getAmount())) {
-                            try {
-                                changesDetector.makeEdit(compound, Field.AMOUNT, f);
-                                mainSceneTableView.refresh();
-                            }
-                            catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        if (!f.equals(compound.getAmount()))
+                            saveChangeToBufferExecutor(compound, Field.AMOUNT, f);
                     }
                     catch (NumberFormatException e) {
                         e.printStackTrace();

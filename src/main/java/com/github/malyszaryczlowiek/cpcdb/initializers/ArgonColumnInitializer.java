@@ -10,8 +10,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.cell.CheckBoxTableCell;
 
-import java.io.IOException;
-
 public class ArgonColumnInitializer extends ColumnInitializer implements Initializable
 {
     private TableColumn<Compound, Boolean> argonCol;
@@ -28,17 +26,9 @@ public class ArgonColumnInitializer extends ColumnInitializer implements Initial
                     Compound compound = compoundBooleanCellDataFeatures.getValue();
                     SimpleBooleanProperty booleanProperty = new SimpleBooleanProperty(compound.isArgon());
                     booleanProperty.addListener(
-                            (ObservableValue<? extends Boolean> observableValue,
-                             Boolean oldValue, Boolean newValue) -> {
-                                try {
-                                    changesDetector.makeEdit(compound, Field.ARGON, newValue);
-                                    mainSceneTableView.refresh();
-                                }
-                                catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            } );
-
+                            (ObservableValue<? extends Boolean> observableValue, Boolean oldValue, Boolean newValue)
+                                    -> saveChangeToBufferExecutor(compound, Field.ARGON, newValue)
+                    );
                     return booleanProperty;
                 } );
         argonCol.setCellFactory(

@@ -1,5 +1,8 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.StageManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowsEnum;
+import com.sun.javafx.stage.StageHelper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,7 +22,9 @@ import java.util.stream.Collectors;
 public class SearchCompoundStageController implements Initializable
 {
     private Stage thisStage;
+    private StageManager stageManager;
     private MainStageController controller;
+    private LocalDate selectedLocalDate;
 
     //@FXML private Button cancelButton;
     //@FXML private Button searchButton;
@@ -38,8 +43,6 @@ public class SearchCompoundStageController implements Initializable
     @FXML private ComboBox<String> searchBeforeAfter;
     @FXML private ComboBox<String> searchArgonStability;
     @FXML private ComboBox<String> searchTempStability;
-
-    private LocalDate selectedLocalDate;
 
 
     @Override
@@ -73,11 +76,14 @@ public class SearchCompoundStageController implements Initializable
         LocalDate today = LocalDate.now();
         searchDatePicker.setValue(today);
         selectedLocalDate = LocalDate.now();
+
+        stageManager = StageManager.getStageManager();
     }
 
     public void setStage(Stage stage)
     {
         thisStage = stage;
+        stageManager.addStage(WindowsEnum.SEARCH_COMPOUND_WINDOW, thisStage);
     }
 
     @FXML

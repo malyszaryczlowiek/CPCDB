@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 /**
  * This class collects every single change for each
- * compound and notify compound what will be change.
+ * compound and notify compound what will be changed.
  */
 class CollectorOfChanges
 {

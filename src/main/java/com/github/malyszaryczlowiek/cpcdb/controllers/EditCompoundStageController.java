@@ -3,6 +3,8 @@ package com.github.malyszaryczlowiek.cpcdb.controllers;
 import com.github.malyszaryczlowiek.cpcdb.buffer.ChangesDetector;
 import com.github.malyszaryczlowiek.cpcdb.compound.*;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.StageManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowsEnum;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -20,6 +22,7 @@ import java.util.regex.Pattern;
 public class EditCompoundStageController implements Initializable
 {
     private Stage stage;
+    private StageManager stageManager;
     private Compound compound;
     private EditChangesStageListener listener;
 
@@ -48,18 +51,20 @@ public class EditCompoundStageController implements Initializable
         ObservableList<String> tempObsList =
                 FXCollections.observableList( TempStability.returnValues() );
         tempStabilityChoiceBox.setItems(tempObsList);
-
+        stageManager = StageManager.getStageManager();
     }
 
 
      public void setStage(Stage stage)
     {
+        stageManager.addStage(WindowsEnum.EDIT_COMPOUND_WINDOW, stage);
         this.stage = stage;
     }
 
     @FXML
     protected void onCancelButtonClicked(ActionEvent event)
     {
+        stageManager.removeStage(WindowsEnum.EDIT_COMPOUND_WINDOW);
         stage.close();
         event.consume();
     }
@@ -68,6 +73,7 @@ public class EditCompoundStageController implements Initializable
     protected void onDeleteCompoundClicked(ActionEvent event)
     {
         listener.reloadTableAfterCompoundDeleting(compound);
+        stageManager.removeStage(WindowsEnum.EDIT_COMPOUND_WINDOW);
         stage.close();
         event.consume();
     }
@@ -84,6 +90,7 @@ public class EditCompoundStageController implements Initializable
     protected void onSaveAndCloseButtonClicked(ActionEvent event) throws IOException
     {
         saveChanges();
+        stageManager.removeStage(WindowsEnum.EDIT_COMPOUND_WINDOW);
         stage.close();
         listener.reloadTableAfterCompoundEdition();
         event.consume();

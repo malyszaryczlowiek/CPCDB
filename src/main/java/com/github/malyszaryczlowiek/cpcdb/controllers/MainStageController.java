@@ -1,13 +1,13 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
+import com.github.malyszaryczlowiek.cpcdb.newBuffer.ActionType;
+import com.github.malyszaryczlowiek.cpcdb.newBuffer.BufferExecutor;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadingDatabase;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
 import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
 import com.github.malyszaryczlowiek.cpcdb.tasks.UpdateLocalDb;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
-import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
-import com.github.malyszaryczlowiek.cpcdb.buffer.ChangesDetector;
 import com.github.malyszaryczlowiek.cpcdb.initializers.*;
 import com.github.malyszaryczlowiek.cpcdb.managers.ColumnManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.*;
@@ -34,7 +34,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -71,9 +70,10 @@ public class MainStageController implements Initializable,
     //@FXML private Menu menuFile;
 
     @FXML private MenuItem menuFileAddCompound;
-    @FXML private MenuItem menuFileLoadFullTable;
-    @FXML private MenuItem menuFileSave;
     @FXML private MenuItem menuFileSearch;
+    @FXML private MenuItem menuFileLoadFullTable;
+    @FXML private MenuItem menuFileLoadDataFromRemoteServer;
+    @FXML private MenuItem menuFileSave;
     @FXML private MenuItem menuFilePreferences;
     @FXML private MenuItem menuFileQuit;
 
@@ -104,9 +104,9 @@ public class MainStageController implements Initializable,
 
     private DoubleProperty progressValue;
     private boolean unblockingTask3 = false;
-    private ChangesDetector changesDetector;
+    private BufferExecutor bufferExecutor;
     private ColumnManager columnManager;
-    private List<Compound> fullListOfCompounds;
+    private List<Compound> fullListOfCompounds; // to jest lista którą trzeba używać jak chcemy zapisać dane do bazy danych
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
 
@@ -118,7 +118,7 @@ public class MainStageController implements Initializable,
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializationTimer = new LaunchTimer();
 
-        if ( checkIfAskForDBProperties() )
+        if (!(new File("propertiesFile").exists())) // checkIfAskForDBProperties()
             WindowFactory.showWindow(WindowsEnum.INITIALIZING_DB_PROPERTIES_WINDOW, null, null);
         else {
             LaunchTimer keyAndPropertiesLoading = new LaunchTimer();
@@ -131,25 +131,24 @@ public class MainStageController implements Initializable,
             progressValue = new SimpleDoubleProperty(0.0);
             currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus);
             currentStatusManager.setCurrentStatus("Initializing program");
-            changesDetector = new ChangesDetector();
             lockProvider = LockProvider.getLockProvider();
             fullListOfCompounds = new ArrayList<>();
-            observableList = FXCollections.observableArrayList(fullListOfCompounds);
+            observableList = FXCollections.observableArrayList(fullListOfCompounds); // todo TE DWIE LINIJKI MOŻNA chyba przenieść do loadingdatabaseTask  12 linijek niżej
             mainSceneTableView.setItems(observableList);
-            columnManager = new ColumnManager(
-                    new MenuItem[]{menuViewShowAllColumns, showAllColumnsContext},
+            bufferExecutor = BufferExecutor.getBufferExecutor(mainSceneTableView, observableList,
+                    menuEditUndo, menuEditRedo, menuFileSave);
+            columnManager = new ColumnManager( new MenuItem[]{menuViewShowAllColumns, showAllColumnsContext},
                     smilesCol, compoundNumCol, amountCol, unitCol, formCol, tempStabilityCol,
                     argonCol, containerCol, storagePlaceCol, lastModificationCol, additionalInfoCol);
-            ColumnInitializer.setUpInitializer(mainSceneTableView, changesDetector);
+            ColumnInitializer.setUpInitializer(mainSceneTableView, bufferExecutor, observableList);
             ErrorFlagsManager.initializeErrorFlagsManager();
-            if ( !SecureProperties.hasProperty("column.width.Smiles") )
-                setWidthOfColumns();
+            if ( !SecureProperties.hasProperty("column.width.Smiles") ) setWidthOfColumns();
+
             Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
                     observableList, mainSceneTableView, progressBar, currentStatusManager, this);
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
             loadingDatabaseThread.start();
-
             Task<Void> task1 = new Task<>()
             {
                 @Override
@@ -174,7 +173,6 @@ public class MainStageController implements Initializable,
                     return null;
                 }
             };
-
             Thread threadTask1 = new Thread(task1);
             Thread threadTask2 = new Thread(task2);
             Thread threadTask3 = new Thread(task3);
@@ -195,11 +193,6 @@ public class MainStageController implements Initializable,
      * ###############################################
      */
 
-    private boolean checkIfAskForDBProperties() {
-         return !( new File("propertiesFile").exists() );
-    }
-
-
     public void setStage(Stage stage) {
         primaryStage = stage;
         if ( CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
@@ -216,14 +209,10 @@ public class MainStageController implements Initializable,
             mainSceneTableView.setOnContextMenuRequested(
                     contextMenuEvent -> {
                         int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
-                        if ( count == 1 ) // Edit Selected Compound
-                            editSelectedCompoundContext.setDisable(false);
-                        else
-                            editSelectedCompoundContext.setDisable(true);
-                        if ( count >= 1 ) //Delete Selected Compound(s)
-                            deleteSelectedCompoundsContext.setDisable(false);
-                        else
-                            deleteSelectedCompoundsContext.setDisable(true);
+                        if ( count == 1 ) editSelectedCompoundContext.setDisable(false); // Edit Selected Compound
+                        else editSelectedCompoundContext.setDisable(true);
+                        if ( count >= 1 ) deleteSelectedCompoundsContext.setDisable(false);//Delete Selected Compound(s)
+                        else deleteSelectedCompoundsContext.setDisable(true);
                     });
         }
         synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
@@ -232,365 +221,6 @@ public class MainStageController implements Initializable,
         initializationTimer.stopTimer("initializing process completed");
     }
 
-    /*
-    * ###############################################
-    * FUNCTIONS FROM MENUS ITEMS
-    * ###############################################
-    */
-
-    // FILE
-
-    /**
-     * Method called when user click on FILE menu
-     */
-    @FXML
-    protected void menuFile() {
-        if ( changesDetector.returnCurrentIndex() > 0)
-            menuFileSave.setDisable(false);
-        else
-            menuFileSave.setDisable(true);
-    }
-
-
-    // FILE -> Add Compound
-
-    @FXML
-    protected void menuFileAddCompound(ActionEvent event) {
-        WindowFactory.showWindow(WindowsEnum.ADD_COMPOUND_WINDOW, this, null);
-        event.consume();
-    }
-
-    // FILE -> Search
-
-    @FXML
-    protected void onFileSearchMenuItemClicked(ActionEvent actionEvent) {
-        WindowFactory.showWindow(WindowsEnum.SEARCH_COMPOUND_WINDOW, null, null);
-        actionEvent.consume();
-    }
-
-    // FILE -> Save
-
-    /**
-     * metoda uruchamiana po kliknięciu save w menu programu
-     */
-    @FXML
-    protected void onMenuFileSaveClicked() {
-        if ( changesDetector.returnCurrentIndex() > 0 )
-            changesDetector.saveChangesToDatabase();
-    }
-
-    @FXML
-    protected void onMenuFilePreferencesClicked(ActionEvent event) {
-        WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
-        event.consume();
-    }
-
-    // FILE -> Quit
-
-    @FXML
-    protected void onMenuFileQuit() {
-        closeProgram();
-    }
-
-    // EDIT
-
-    @FXML
-    protected void menuEdit() {
-        int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
-
-        // Edit -> Undo
-        if ( changesDetector.returnCurrentIndex() > 0 )
-            menuEditUndo.setDisable(false);
-        else
-            menuEditUndo.setDisable(true);
-
-
-        // Edit -> Redo
-        if ( changesDetector.isBufferNotOnLastPosition() )
-            menuEditRedo.setDisable(false);
-        else
-            menuEditRedo.setDisable(true);
-
-
-        // Edit -> Edit Selected Compound
-        if ( count == 1 )
-            menuEditSelectedCompound.setDisable(false);
-        else
-            menuEditSelectedCompound.setDisable(true);
-
-
-        // Edit -> Delete Selected Compound(s)
-        if ( count >= 1 )
-            menuEditDeleteSelectedCompounds.setDisable(false);
-        else
-            menuEditDeleteSelectedCompounds.setDisable(true);
-    }
-
-    // EDIT -> Undo
-
-    @FXML
-    protected void onUndoClicked() {
-        if ( changesDetector.returnCurrentIndex() > 0 ) {
-            try {
-                Map<Integer, Compound> mapOfCompoundsToChangeInTableView = changesDetector.undo();
-                ActionType actionType = changesDetector.getActionTypeOfCurrentOperation();
-                if ( mapOfCompoundsToChangeInTableView != null )
-                    executeUndoRedo( mapOfCompoundsToChangeInTableView, actionType );
-                mainSceneTableView.refresh();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @FXML
-    protected void onRedoClicked() {
-        if ( changesDetector.isBufferNotOnLastPosition() ) {
-            try {
-                Map<Integer, Compound> mapOfCompoundsToChangeInTableView = changesDetector.redo();
-                ActionType actionType = changesDetector.getActionTypeOfCurrentOperation();
-                if ( mapOfCompoundsToChangeInTableView != null )
-                    executeUndoRedo( mapOfCompoundsToChangeInTableView, actionType );
-                mainSceneTableView.refresh();
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @FXML
-    protected void onMenuEditSelectAll() {
-        mainSceneTableView.getSelectionModel().selectAll();
-    }
-
-    private void executeUndoRedo(Map<Integer, Compound> mapOfCompoundsToChangeInTableView, ActionType actionType) {
-        if ( actionType.equals( ActionType.REMOVE ) ) {
-            if ( mapOfCompoundsToChangeInTableView
-                    .values()
-                    .stream()
-                    .allMatch( Compound::isToDelete )
-            )
-                observableList.removeAll( mapOfCompoundsToChangeInTableView.values() );
-            else
-                mapOfCompoundsToChangeInTableView.forEach(
-                        (index, compound) -> observableList.add(index, compound)
-                );
-
-        }
-        if ( actionType.equals( ActionType.INSERT ) ) {
-            if ( mapOfCompoundsToChangeInTableView
-                    .values()
-                    .stream()
-                    .allMatch( Compound::isToDelete )
-            )
-                observableList.removeAll( mapOfCompoundsToChangeInTableView.values() );
-            else
-                mapOfCompoundsToChangeInTableView.forEach(
-                        (index, compound) -> observableList.add(index, compound)
-                );
-        }
-    }
-
-
-    // VIEW -> Full Screen
-
-    @FXML
-    protected void changeFullScreenMode(ActionEvent event) {
-        if (primaryStage.isFullScreen()) {
-            primaryStage.setFullScreen(false);
-            menuViewFullScreen.setSelected(false);
-        }
-        else {
-            primaryStage.setFullScreen(true);
-            menuViewFullScreen.setSelected(true);
-        }
-        event.consume();
-    }
-
-
-    // VIEW -> SHOW -> Show All Columns
-
-    @FXML
-    protected void onMenuShowAllColumns() {
-        columnManager.onShowHideAllColumns();
-    }
-
-
-    @FXML
-    protected void showEditCompoundStage() {
-        Compound selectedItems = mainSceneTableView.getSelectionModel()
-                .getSelectedItems().get(0);
-        WindowFactory.showWindow(WindowsEnum.EDIT_COMPOUND_WINDOW, this, selectedItems);
-    }
-
-
-    @Override
-    public void notifyAboutAddedCompound(Compound compound) {
-        observableList.add(compound);
-        Integer index = observableList.indexOf(compound);
-        Map<Integer, Compound> toInsert = new TreeMap<>();
-        toInsert.put(index, compound);
-        try {
-            changesDetector.makeInsert(toInsert);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /**
-     * Metoda wywołana z interfejsu
-     * SearchCompoundStageController.OnChosenSearchingCriteriaListener
-     * która ma za zadanie odfiltrowanie compoundów spełniających żadane kryteria
-     * a następnie umieszczenie znalezionych związków w tabeli
-     */
-    @Override
-    public void searchingCriteriaChosen(String smiles, String smilesAccuracy,
-                                        String compoundNumber, String compoundNumberAccuracy,
-                                        String form, String container, String storagePlace,
-                                        String beforeAfter, LocalDate selectedLocalDate,
-                                        String argon, String temperature, String additionalInfo)
-    {
-        SearchEngine searchEngine = new SearchEngine(fullListOfCompounds, smiles, smilesAccuracy,
-                compoundNumber, compoundNumberAccuracy, form, container, storagePlace, beforeAfter,
-                selectedLocalDate, argon, temperature, additionalInfo);
-        boolean empty = searchEngine.returnListOfFoundCompounds().isEmpty();        // display found compounds
-        if (!empty) {
-            observableList.clear();
-            observableList.setAll(searchEngine.returnListOfFoundCompounds());
-            mainSceneTableView.refresh();
-        }
-        else
-            ShortAlertWindowFactory.showErrorWindow(ErrorType.NOT_FOUND_COMPOUND);
-    }
-
-    @FXML
-    protected void reloadTable() {
-        observableList.clear();
-        observableList.setAll(fullListOfCompounds);
-        mainSceneTableView.refresh();
-    }
-
-    /*
-     * ###############################################
-     * METHODS OF TABLE VIEW CONTEXT MENU
-     * ###############################################
-     */
-
-    @FXML
-    protected void deleteSelectedCompounds(ActionEvent event) {
-        ObservableList<Compound> selectedItems = mainSceneTableView.getSelectionModel().getSelectedItems();
-        Map<Integer, Compound> mapOfCompounds = new TreeMap<>();
-        selectedItems.forEach(
-                compound ->
-                        mapOfCompounds.put( observableList.indexOf( compound ), compound )
-        );
-        changesDetector.makeDelete(mapOfCompounds);
-        observableList.removeAll(selectedItems.sorted());
-        mainSceneTableView.refresh();
-        fullListOfCompounds.clear();
-        fullListOfCompounds.addAll(observableList.sorted());
-        event.consume();
-    }
-
-    /*
-     * ###############################################
-     * METHODS TO CLOSE PROGRAM
-     * ###############################################
-     */
-
-    private void closeProgram() {
-        if ( changesDetector.returnCurrentIndex() > 0 )
-            WindowFactory.showWindow(WindowsEnum.SAVE_CHANGES_BEFORE_QUIT_WINDOW,this, null);
-        else
-            onCloseProgramWithoutChanges();
-    }
-
-    @Override
-    public void reloadTableAfterCompoundEdition() {
-        mainSceneTableView.refresh();
-    }
-
-    /**
-     * Method implemented from EditCompoundStageController.EditChangesStageListener interface
-     * @param compound Compound to delete
-     */
-    @Override
-    public void reloadTableAfterCompoundDeleting(Compound compound) {
-        Map<Integer, Compound> compoundToDelete = new TreeMap<>();
-        compoundToDelete.put( observableList.indexOf(compound), compound );
-        changesDetector.makeDelete(compoundToDelete);
-        observableList.remove(compound);
-        mainSceneTableView.refresh();
-    }
-
-    @Override
-    public void onSaveChangesAndCloseProgram() {
-        LaunchTimer closeTimer = new LaunchTimer();
-        Task<Void> task1 = new Task<>()
-        {
-            @Override
-            protected Void call()
-            {
-                LaunchTimer saveTimer = new LaunchTimer();
-                changesDetector.saveChangesToDatabase();
-                saveTimer.stopTimer("Save Timer is stopped");
-                return null;
-            }
-        };
-        Task<Void> task2 = new Task<>()
-        {
-            @Override
-            protected Void call() {
-                setWidthOfColumns();
-                SecureProperties.saveProperties();
-                primaryStage.close();
-                return null;
-            }
-        };
-        Thread thread1 = new Thread(task1);
-        Thread thread2 = new Thread(task2);
-        thread1.start();
-        thread2.start();
-        try {
-            thread2.join();
-            thread1.join();
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        closeTimer.stopTimer("closing time when must save data to DB");
-        Platform.exit();
-    }
-
-    @Override
-    public void onCloseProgramWithoutChanges() {
-        LaunchTimer closeTimer = new LaunchTimer();
-        //saveTableViewsColumnSizesAndOrder();
-        setWidthOfColumns();
-        SecureProperties.saveProperties();
-        closeTimer.stopTimer("closing time when NOT saving changes only properties");
-        Platform.exit();
-    }
-
-    private void setWidthOfColumns() {
-        SecureProperties.setProperty("column.width.Smiles", String.valueOf( smilesCol.getWidth() ));
-        SecureProperties.setProperty("column.width.CompoundName", String.valueOf( compoundNumCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Amount", String.valueOf( amountCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Unit", String.valueOf( unitCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Form", String.valueOf( formCol.getWidth() ));
-        SecureProperties.setProperty("column.width.TemperatureStability", String.valueOf( tempStabilityCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Argon", String.valueOf( argonCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Container", String.valueOf( containerCol.getWidth() ));
-        SecureProperties.setProperty("column.width.StoragePlace", String.valueOf( storagePlaceCol.getWidth() ));
-        SecureProperties.setProperty("column.width.LastModification", String.valueOf( lastModificationCol.getWidth() ));
-        SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( additionalInfoCol.getWidth() ));
-    }
-
-
     private void settingUpTask1() {
         new SmilesColumnInitializer(smilesCol).initialize();
         new CompoundNumberInitializer(compoundNumCol).initialize();
@@ -598,7 +228,7 @@ public class MainStageController implements Initializable,
         new UnitColumnInitializer(unitCol).initialize();
         MenuItemInitializer.initialize(menuFileAddCompound, menuFileLoadFullTable, menuFileSave,
                 menuFileSearch,menuFilePreferences, menuFileQuit, menuEditSelectedCompound,
-                menuViewFullScreen, menuHelpAboutCPCDB);
+                menuViewFullScreen, menuHelpAboutCPCDB, menuFileLoadDataFromRemoteServer);
         menuViewFullScreen.setSelected(false);
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!unblockingTask3)
@@ -638,6 +268,287 @@ public class MainStageController implements Initializable,
         columnManager.setColumnFontSize();
     }
 
+    /*
+    * ###############################################
+    * FUNCTIONS FROM MENUS ITEMS
+    * ###############################################
+    */
+
+   // FILE -> Add Compound
+    @FXML
+    protected void menuFileAddCompound(ActionEvent event) {
+        WindowFactory.showWindow(WindowsEnum.ADD_COMPOUND_WINDOW, this, null);
+        event.consume();
+    }
+
+    // FILE -> Search
+    @FXML
+    protected void onFileSearchMenuItemClicked(ActionEvent actionEvent) {
+        WindowFactory.showWindow(WindowsEnum.SEARCH_COMPOUND_WINDOW, null, null);
+        actionEvent.consume();
+    }
+
+    // FILE -> Save
+    /**
+     * metoda uruchamiana po kliknięciu save w menu programu
+     */
+    @FXML
+    protected void onMenuFileSaveClicked() {
+        if ( bufferExecutor.returnCurrentIndex() > 0 )
+            bufferExecutor.saveChangesToDatabase();  // robię save
+        // TODO tutaj trzeba uruchomić oddzielny task do zapisania nowych zmian bo każde wywołanie zapytania do bazy danych
+        // powinno być wykonane w oddzielnym wątku tak aby nie blokować głównego.
+    }
+
+    @FXML
+    protected void onMenuFilePreferencesClicked(ActionEvent event) {
+        WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
+        event.consume();
+    }
+
+    @FXML
+    protected void onMenuFileLoadDataFromRemoteServer() {
+        // to jakoś trzeba zimplementować
+        // TODO sprawdź czy sa wprowadzone jakieś zmiany czy bufor nie jest pusty
+        // jeśli jest to wyślij zmiany do remote server i wczytaj ponownie całą bazę.
+
+        /*
+        if (brak błędów połączenia do remote server) {
+            fullListOfCompounds.clear();
+            observableList.clear();
+            Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
+                    observableList, mainSceneTableView, progressBar, currentStatusManager, this);
+            Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
+            loadingDatabaseThread.setDaemon(true);
+            loadingDatabaseThread.start();
+        }
+         */
+    }
+
+    // FILE -> Quit
+
+    @FXML
+    protected void onMenuFileQuit() {
+        closeProgram();
+    }
+
+    // EDIT
+
+    @FXML
+    protected void menuEdit() {
+        int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
+        // Edit -> Edit Selected Compound
+        if (count == 1) menuEditSelectedCompound.setDisable(false);
+        else menuEditSelectedCompound.setDisable(true);
+        // Edit -> Delete Selected Compound(s)
+        if (count >= 1) menuEditDeleteSelectedCompounds.setDisable(false);
+        else menuEditDeleteSelectedCompounds.setDisable(true);
+    }
+
+        /*  to jest przeniesione do bufferExeutora
+        // Edit -> Undo
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) menuEditUndo.setDisable(false);
+        else menuEditUndo.setDisable(true);
+
+        // Edit -> Redo
+        if ( bufferExecutor.isNothingToRedo() ) menuEditRedo.setDisable(false);
+        else menuEditRedo.setDisable(true);
+        */
+    // EDIT -> Undo
+
+    @FXML
+    protected void onUndoClicked() {
+        bufferExecutor.undo();
+    } // robię undo
+
+    @FXML
+    protected void onRedoClicked() {
+        bufferExecutor.redo();
+    } // robię redo
+
+    @FXML
+    protected void onMenuEditSelectAll() {
+        mainSceneTableView.getSelectionModel().selectAll();
+    }
+
+    // VIEW -> Full Screen
+
+    @FXML
+    protected void changeFullScreenMode(ActionEvent event) {
+        if (primaryStage.isFullScreen()) {
+            primaryStage.setFullScreen(false);
+            menuViewFullScreen.setSelected(false);
+        }
+        else {
+            primaryStage.setFullScreen(true);
+            menuViewFullScreen.setSelected(true);
+        }
+        event.consume();
+    }
+
+    // VIEW -> SHOW -> Show All Columns
+
+    @FXML
+    protected void onMenuShowAllColumns() {
+        columnManager.onShowHideAllColumns();
+    }
+
+
+    @FXML
+    protected void showEditCompoundStage() {
+        Compound selectedItems = mainSceneTableView.getSelectionModel()
+                .getSelectedItems().get(0);
+        WindowFactory.showWindow(WindowsEnum.EDIT_COMPOUND_WINDOW, this, selectedItems);
+    }
+
+
+    @Override
+    public void notifyAboutAddedCompound(Compound compound) {
+        observableList.add(compound);
+        Integer index = observableList.indexOf(compound);
+        Map<Integer, Compound> toInsert = new TreeMap<>();
+        toInsert.put(index, compound);
+        bufferExecutor.addChange(ActionType.INSERT, toInsert,null,null); //  robię insert
+    }
+
+
+    /**
+     * Metoda wywołana z interfejsu
+     * SearchCompoundStageController.OnChosenSearchingCriteriaListener
+     * która ma za zadanie odfiltrowanie compoundów spełniających żadane kryteria
+     * a następnie umieszczenie znalezionych związków w tabeli
+     */
+    @Override
+    public void searchingCriteriaChosen(String smiles, String smilesAccuracy,
+                                        String compoundNumber, String compoundNumberAccuracy,
+                                        String form, String container, String storagePlace,
+                                        String beforeAfter, LocalDate selectedLocalDate,
+                                        String argon, String temperature, String additionalInfo)
+    {
+        SearchEngine searchEngine = new SearchEngine(fullListOfCompounds, smiles, smilesAccuracy,
+                compoundNumber, compoundNumberAccuracy, form, container, storagePlace, beforeAfter,
+                selectedLocalDate, argon, temperature, additionalInfo);
+        if (!searchEngine.returnListOfFoundCompounds().isEmpty()) {// display found compounds
+            observableList.clear();
+            observableList.setAll( searchEngine.returnListOfFoundCompounds() );
+            mainSceneTableView.refresh();
+        }
+        else ShortAlertWindowFactory.showErrorWindow(ErrorType.NOT_FOUND_COMPOUND);
+    }
+
+    @FXML
+    protected void reloadTable() {
+        observableList.clear();
+        observableList.setAll(fullListOfCompounds);
+        mainSceneTableView.refresh();
+    }
+
+    /*
+     * ###############################################
+     * METHODS OF TABLE VIEW CONTEXT MENU
+     * ###############################################
+     */
+
+    @FXML
+    protected void deleteSelectedCompounds(ActionEvent event) {
+        ObservableList<Compound> selectedItems = mainSceneTableView.getSelectionModel().getSelectedItems();
+        Map<Integer, Compound> mapOfCompounds = new TreeMap<>();
+        selectedItems.forEach( compound -> mapOfCompounds.put( observableList.indexOf( compound ), compound ) );
+        bufferExecutor.addChange(ActionType.REMOVE, mapOfCompounds, null, null);// robię remove
+        fullListOfCompounds.clear();
+        fullListOfCompounds.addAll(observableList.sorted());
+        event.consume();
+    }
+
+    /*
+     * ###############################################
+     * METHODS TO CLOSE PROGRAM
+     * ###############################################
+     */
+
+    private void closeProgram() {
+        if ( bufferExecutor.returnCurrentIndex() > 0 )
+            WindowFactory.showWindow(WindowsEnum.SAVE_CHANGES_BEFORE_QUIT_WINDOW,this, null);
+        else onCloseProgramWithoutChanges();
+    }
+
+    @Override
+    public void reloadTableAfterCompoundEdition() { mainSceneTableView.refresh(); }
+
+    /**
+     * Method implemented from EditCompoundStageController.EditChangesStageListener interface
+     * @param compound Compound to delete
+     */
+    @Override
+    public void reloadTableAfterCompoundDeleting(Compound compound) {
+        Map<Integer, Compound> compoundToDelete = new TreeMap<>();
+        var index =  observableList.indexOf(compound);
+        compoundToDelete.put(index, compound );
+        bufferExecutor.addChange(ActionType.REMOVE, compoundToDelete, null, null); // robię remove
+        //observableList.remove(compound);
+        //mainSceneTableView.refresh();
+    }
+
+    @Override
+    public void onSaveChangesAndCloseProgram() {
+        LaunchTimer closeTimer = new LaunchTimer();
+        Task<Void> task1 = new Task<>()
+        {
+            @Override
+            protected Void call()
+            {
+                LaunchTimer saveTimer = new LaunchTimer();
+                bufferExecutor.saveChangesToDatabase(); // robię save
+                saveTimer.stopTimer("Save Timer is stopped");
+                return null;
+            }
+        };
+        Task<Void> task2 = new Task<>()
+        {
+            @Override
+            protected Void call() {
+                setWidthOfColumns();
+                SecureProperties.saveProperties();
+                primaryStage.close();
+                return null;
+            }
+        };
+        Thread thread1 = new Thread(task1);
+        Thread thread2 = new Thread(task2);
+        thread1.start();
+        thread2.start();
+        try {
+            thread2.join();
+            thread1.join();
+        }
+        catch (InterruptedException e) { e.printStackTrace(); }
+        closeTimer.stopTimer("closing time when must save data to DB");
+        Platform.exit();
+    }
+
+    @Override
+    public void onCloseProgramWithoutChanges() {
+        LaunchTimer closeTimer = new LaunchTimer();
+        //saveTableViewsColumnSizesAndOrder();
+        setWidthOfColumns();
+        SecureProperties.saveProperties();
+        closeTimer.stopTimer("closing time when NOT saving changes only properties");
+        Platform.exit();
+    }
+
+    private void setWidthOfColumns() {
+        SecureProperties.setProperty("column.width.Smiles", String.valueOf( smilesCol.getWidth() ));
+        SecureProperties.setProperty("column.width.CompoundName", String.valueOf( compoundNumCol.getWidth() ));
+        SecureProperties.setProperty("column.width.Amount", String.valueOf( amountCol.getWidth() ));
+        SecureProperties.setProperty("column.width.Unit", String.valueOf( unitCol.getWidth() ));
+        SecureProperties.setProperty("column.width.Form", String.valueOf( formCol.getWidth() ));
+        SecureProperties.setProperty("column.width.TemperatureStability", String.valueOf( tempStabilityCol.getWidth() ));
+        SecureProperties.setProperty("column.width.Argon", String.valueOf( argonCol.getWidth() ));
+        SecureProperties.setProperty("column.width.Container", String.valueOf( containerCol.getWidth() ));
+        SecureProperties.setProperty("column.width.StoragePlace", String.valueOf( storagePlaceCol.getWidth() ));
+        SecureProperties.setProperty("column.width.LastModification", String.valueOf( lastModificationCol.getWidth() ));
+        SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( additionalInfoCol.getWidth() ));
+    }
 
     @FXML
     protected void onShowHideColumn() {

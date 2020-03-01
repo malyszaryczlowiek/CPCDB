@@ -2,6 +2,7 @@ package com.github.malyszaryczlowiek.cpcdb.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
+import com.github.malyszaryczlowiek.cpcdb.newBuffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 
 import javafx.scene.control.TableColumn;
@@ -10,6 +11,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class CompoundNumberInitializer extends ColumnInitializer implements Initializable
 {
@@ -30,15 +33,8 @@ public class CompoundNumberInitializer extends ColumnInitializer implements Init
                     String newNumber = event.getNewValue();
                     int row = position.getRow();
                     Compound compound = event.getTableView().getItems().get(row);
-                    if (!newNumber.equals(compound.getCompoundNumber())) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.COMPOUNDNUMBER, newNumber);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if (!newNumber.equals(compound.getCompoundNumber()))
+                        saveChangeToBufferExecutor(compound, Field.COMPOUNDNUMBER, newNumber);
                 });
         compoundNumCol.setPrefWidth(Double.parseDouble(SecureProperties.getProperty("column.width.CompoundName")));
         boolean compoundNumber = "true".equals(SecureProperties.getProperty("column.show.CompoundName"));

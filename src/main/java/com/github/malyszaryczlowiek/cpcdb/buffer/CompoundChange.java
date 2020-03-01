@@ -19,7 +19,6 @@ class CompoundChange
 
     private String temporaryString;
     private Float temporaryFloat;
-    private LocalDateTime oldModificationTime;
     private LocalDateTime newModificationTime;
     private Boolean temporaryBoolean;
 
@@ -29,7 +28,6 @@ class CompoundChange
     {
         if ( actionType.equals(ActionType.INSERT) || actionType.equals(ActionType.REMOVE) )
         {
-            //listOfCompoundsToDelete = new ArrayList<>(compoundToChange);
             mapOfCompounds = new TreeMap<>(compoundToChange);
             this.actionType = actionType;
             if (actionType.equals(ActionType.REMOVE))
@@ -149,7 +147,7 @@ class CompoundChange
                 throw new IOException("Value type and Field are not consistent.");
 
             // TODO zrobić coś z tą datą AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-            oldModificationTime = compound.getDateTimeModification();
+            LocalDateTime oldModificationTime = compound.getDateTimeModification();
             compound.setDateTimeModification(newModificationTime);
             newModificationTime = oldModificationTime;
         }

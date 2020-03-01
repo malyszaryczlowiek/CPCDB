@@ -20,7 +20,7 @@ public class LastModificationColumnInitializer extends ColumnInitializer impleme
         // Last Modification column set Up
         lastModificationCol.setCellValueFactory(new PropertyValueFactory<>("dateTimeModification"));
         lastModificationCol.setPrefWidth( Double.parseDouble( SecureProperties.getProperty("column.width.LastModification") ));
-        boolean lastMod = "true".equals(SecureProperties.getProperty("column.show.LastModification"));
-        lastModificationCol.setVisible(lastMod);
+        boolean isColumnVisible = "true".equals(SecureProperties.getProperty("column.show.LastModification"));
+        lastModificationCol.setVisible(isColumnVisible);
     }
 }

@@ -9,8 +9,6 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 
-import java.io.IOException;
-
 public class AdditionalInfoColumnInitializer extends ColumnInitializer implements Initializable
 {
     private TableColumn<Compound, String> additionalInfoCol;
@@ -28,18 +26,9 @@ public class AdditionalInfoColumnInitializer extends ColumnInitializer implement
                     TablePosition<Compound, String> position = event.getTablePosition();
                     String newInfo = event.getNewValue();
                     int row = position.getRow();
-
                     Compound compound = event.getTableView().getItems().get(row);
-
-                    if (!newInfo.equals(compound.getAdditionalInfo())) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.ADDITIONALINFO, newInfo);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if (!newInfo.equals(compound.getAdditionalInfo()))
+                        saveChangeToBufferExecutor(compound, Field.ADDITIONALINFO, newInfo);
                 });
         additionalInfoCol.setPrefWidth( Double.parseDouble( SecureProperties.getProperty("column.width.AdditionalInfo") ));
         boolean additionalInfo =  "true".equals(SecureProperties.getProperty("column.show.AdditionalInfo"));

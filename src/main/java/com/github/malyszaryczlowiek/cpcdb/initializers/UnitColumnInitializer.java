@@ -1,18 +1,16 @@
 package com.github.malyszaryczlowiek.cpcdb.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
-
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
+
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.ComboBoxTableCell;
-
-import java.io.IOException;
 
 public class UnitColumnInitializer extends ColumnInitializer implements Initializable
 {
@@ -37,20 +35,11 @@ public class UnitColumnInitializer extends ColumnInitializer implements Initiali
         unitCol.setOnEditCommit(
                 (TableColumn.CellEditEvent<Compound, String> event) -> {
                     TablePosition<Compound, String> position = event.getTablePosition();
-
                     String newUnit = event.getNewValue();
                     int row = position.getRow();
                     Compound compound = event.getTableView().getItems().get(row);
-
-                    if (!Unit.stringToEnum(newUnit).equals(compound.getUnit())) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.UNIT, newUnit);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if (!Unit.stringToEnum(newUnit).equals(compound.getUnit()))
+                        saveChangeToBufferExecutor(compound, Field.UNIT, newUnit);
                 });
         unitCol.setPrefWidth(Double.parseDouble(SecureProperties.getProperty("column.width.Unit")));
         boolean unit = "true".equals(SecureProperties.getProperty("column.show.Unit"));

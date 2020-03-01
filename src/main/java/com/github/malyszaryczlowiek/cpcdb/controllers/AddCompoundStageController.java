@@ -4,6 +4,8 @@ import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.TempStability;
 import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
 
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.StageManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.WindowsEnum;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,6 +26,7 @@ public class AddCompoundStageController implements Initializable
     private Stage stage;
 
     private MainStageController mainStageControllerObject;
+    private StageManager stageManager;
 
     //@FXML private Label smilesLabel;
     @FXML private Label amountLabel;
@@ -48,8 +51,7 @@ public class AddCompoundStageController implements Initializable
     @FXML private CheckBox argonCheckBox;
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle)
-    {
+    public void initialize(URL url, ResourceBundle resourceBundle) {
         // setting up unit choice box
         ObservableList<String> units = FXCollections.observableArrayList(
                 Unit.mg.getAbbreviation(),
@@ -60,7 +62,6 @@ public class AddCompoundStageController implements Initializable
         unitChoiceBox.setItems(units);
         unitChoiceBox.setValue(Unit.NS.toString());
 
-
         ObservableList<String> temp = FXCollections.observableArrayList(
                 TempStability.NS.getAbbreviation(),
                 TempStability.RT.getAbbreviation(),
@@ -69,17 +70,13 @@ public class AddCompoundStageController implements Initializable
         tempStabilityChoiceBox.setItems(temp);
         tempStabilityChoiceBox.setValue(TempStability.NS.toString());
 
-
-        // seting up resizability
-
+        stageManager = StageManager.getStageManager();
     }
 
     @FXML
-    protected void addButtonClicked(ActionEvent event)
-    {
+    protected void addButtonClicked(ActionEvent event) {
         String smiles = smilesTextField.getText(); // smiles nie może być null
-        if (smiles.equals(""))
-        {
+        if (smiles.equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setResizable(true);
             alert.setWidth(700);
@@ -87,11 +84,8 @@ public class AddCompoundStageController implements Initializable
             alert.setTitle("Error");
             alert.setHeaderText("Smiles Cannot be empty.");
             alert.setContentText("You have to add Smiles.");
-
             alert.showAndWait();
-
             smilesTextField.requestFocus();
-
             return; // kończymy funkcję
         }
 
@@ -99,8 +93,7 @@ public class AddCompoundStageController implements Initializable
         String amountString = amountTextField.getText();
         float amount;
 
-        if (!matchesFloatPattern(amountString))
-        {
+        if (!matchesFloatPattern(amountString)) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setResizable(true);
             alert.setWidth(700);
@@ -108,15 +101,12 @@ public class AddCompoundStageController implements Initializable
             alert.setTitle("Error");
             alert.setHeaderText("Incorrect 'Amount' data type:");
             alert.setContentText("Amount input must have number data format.");
-
             alert.showAndWait();
-
             amountTextField.requestFocus();
-
             return; // kończymy funkcję
         }
         else
-            amount = Float.valueOf(amountString);
+            amount = Float.parseFloat(amountString);
 
         String unit = unitChoiceBox.getValue();
         String form = formTextField.getText();
@@ -134,24 +124,25 @@ public class AddCompoundStageController implements Initializable
         listener.notifyAboutAddedCompound(compound);
 
         event.consume();
+        stageManager.removeStage(WindowsEnum.ADD_COMPOUND_WINDOW);
         stage.close();
     }
 
     @FXML
-    protected void cancelButtonClicked(ActionEvent event)
-    {
+    protected void cancelButtonClicked(ActionEvent event){
+        stageManager.removeStage(WindowsEnum.ADD_COMPOUND_WINDOW);
         stage.close();
         event.consume();
     }
 
-    public void setStage(Stage stage)
-    {
+    public void setStage(Stage stage) {
         this.stage = stage;
+        stageManager.addStage(WindowsEnum.ADD_COMPOUND_WINDOW, stage);
+
         Scene scene = stage.getScene();
 
-        scene.widthProperty()
-                .addListener( (ObservableValue<? extends Number> observableValue, Number number, Number t1) ->
-                {
+        scene.widthProperty().addListener(
+                (ObservableValue<? extends Number> observableValue, Number number, Number t1) -> {
                     double width = (double) t1;
                     double widthOfTextFields = width - 180 ;
 
@@ -169,28 +160,25 @@ public class AddCompoundStageController implements Initializable
                 } );
 
 
-        scene.heightProperty().addListener( (ObservableValue<? extends Number> observableValue, Number number, Number t1) ->
-            {
-                double height = (double) t1;
-                double differenceByThree = (height - 370) /3 ;
-                storagePlaceTextArea.prefHeightProperty().setValue(60 + differenceByThree);
-                double storageTemporaryHeight = storagePlaceTextArea.getHeight();
-                addtionalInfoLabel.setLayoutY(150 + 60 + differenceByThree + 10);
-                additionalInfoTextArea.setLayoutY(storagePlaceLabel.getLayoutY() + storageTemporaryHeight + 10);
-                additionalInfoTextArea.prefHeightProperty().setValue(105 + 2* differenceByThree);
-            } );
+        scene.heightProperty().addListener(
+                (ObservableValue<? extends Number> observableValue, Number number, Number t1) -> {
+                    double height = (double) t1;
+                    double differenceByThree = (height - 370) /3 ;
+                    storagePlaceTextArea.prefHeightProperty().setValue(60 + differenceByThree);
+                    double storageTemporaryHeight = storagePlaceTextArea.getHeight();
+                    addtionalInfoLabel.setLayoutY(150 + 60 + differenceByThree + 10);
+                    additionalInfoTextArea.setLayoutY(storagePlaceLabel.getLayoutY() + storageTemporaryHeight + 10);
+                    additionalInfoTextArea.prefHeightProperty().setValue(105 + 2* differenceByThree);
+                } );
     }
 
-    private boolean matchesFloatPattern(String string)
-    {
+    private boolean matchesFloatPattern(String string) {
         boolean resultInt = Pattern.matches("[0-9]+", string);
         boolean resultFloat = Pattern.matches("[0-9]*[.][0-9]+", string);
-
         return resultInt || resultFloat;
     }
 
-    public void setMainStageControllerObject(MainStageController controller)
-    {
+    public void setMainStageControllerObject(MainStageController controller) {
         mainStageControllerObject = controller;
     }
 

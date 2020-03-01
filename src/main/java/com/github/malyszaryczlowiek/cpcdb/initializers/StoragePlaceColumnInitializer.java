@@ -9,8 +9,6 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 
-import java.io.IOException;
-
 public class StoragePlaceColumnInitializer  extends ColumnInitializer implements Initializable
 {
     private TableColumn<Compound, String> storagePlaceCol;
@@ -29,16 +27,8 @@ public class StoragePlaceColumnInitializer  extends ColumnInitializer implements
                     String newStoragePlace = event.getNewValue();
                     int row = position.getRow();
                     Compound compound = event.getTableView().getItems().get(row);
-
-                    if ( !newStoragePlace.equals( compound.getStoragePlace() ) ) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.STORAGEPLACE, newStoragePlace);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if ( !newStoragePlace.equals( compound.getStoragePlace() ) )
+                        saveChangeToBufferExecutor(compound, Field.STORAGEPLACE, newStoragePlace);
                 });
         storagePlaceCol.setPrefWidth( Double.parseDouble( SecureProperties.getProperty("column.width.StoragePlace") ));
         boolean storagePlace = "true".equals(SecureProperties.getProperty("column.show.StoragePlace"));

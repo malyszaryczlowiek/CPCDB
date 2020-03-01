@@ -9,8 +9,6 @@ import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 
-import java.io.IOException;
-
 public  class  SmilesColumnInitializer extends ColumnInitializer implements Initializable
 {
     private TableColumn<Compound, String> smilesCol;
@@ -28,21 +26,12 @@ public  class  SmilesColumnInitializer extends ColumnInitializer implements Init
                     TablePosition<Compound, String> pos = event.getTablePosition();
                     String newSmiles = event.getNewValue();
                     int row = pos.getRow();
-
                     Compound compound = event.getTableView().getItems().get(row);
-
-                    if (!newSmiles.equals(compound.getSmiles())) {
-                        try {
-                            changesDetector.makeEdit(compound, Field.SMILES, newSmiles);
-                            mainSceneTableView.refresh();
-                        }
-                        catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    if ( !newSmiles.equals(compound.getSmiles()))
+                        saveChangeToBufferExecutor(compound, Field.SMILES, newSmiles);
                 });
         smilesCol.setPrefWidth(Double.parseDouble(SecureProperties.getProperty("column.width.Smiles")));
-        boolean smiles= "true".equals(SecureProperties.getProperty("column.show.Smiles"));
-        smilesCol.setVisible(smiles);
+        boolean isColumnVisible= "true".equals(SecureProperties.getProperty("column.show.Smiles"));
+        smilesCol.setVisible(isColumnVisible);
     }
 }

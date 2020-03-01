@@ -18,11 +18,14 @@
     <children>
         <MenuBar maxWidth="4100.0" VBox.vgrow="NEVER">
             <menus>
-                <Menu fx:id="menuFile" mnemonicParsing="false" onShowing="#menuFile" text="File">
+                <Menu fx:id="menuFile" mnemonicParsing="false" text="File">
                     <items>
                   <MenuItem fx:id="menuFileAddCompound" mnemonicParsing="false" onAction="#menuFileAddCompound" text="Add Compound" />
-                  <MenuItem fx:id="menuFileLoadFullTable" mnemonicParsing="false" onAction="#reloadTable" text="Load Full Table Again" />
                   <MenuItem fx:id="menuFileSearch" mnemonicParsing="false" onAction="#onFileSearchMenuItemClicked" text="Search" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem fx:id="menuFileLoadFullTable" mnemonicParsing="false" onAction="#reloadTable" text="Load Full Table Again" />
+                  <MenuItem fx:id="menuFileLoadDataFromRemoteServer" mnemonicParsing="false" onAction="#onMenuFileLoadDataFromRemoteServer" text="Load Data From Remote Server" />
+                  <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="menuFileSave" mnemonicParsing="false" onAction="#onMenuFileSaveClicked" text="Save" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem fx:id="menuFilePreferences" mnemonicParsing="false" onAction="#onMenuFilePreferencesClicked" text="Preferences" />
