@@ -7,6 +7,7 @@ import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 public class Change
@@ -17,13 +18,15 @@ public class Change
     private String newString;
     private Float newFloat;
     private LocalDateTime newModificationTime;
+    private LocalDateTime oldModificationTime;
     private Boolean newBoolean;
 
     <T> Change(ActionType actionType, Map<Integer,Compound> mapOfCompounds, Field field, T newValue) throws IllegalArgumentException {
         this.actionType = actionType;
         this.mapOfCompounds = mapOfCompounds;
         this.field = field;
-        this.newModificationTime = LocalDateTime.now();
+        this.newModificationTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        this.oldModificationTime = ((Compound) mapOfCompounds.values().toArray()[0]).getDateTimeModification();
         // jeśli typem operacji jest zmiana to musimy widziec jakiego typu jest nowa wartość
         if ( actionType.equals(ActionType.EDIT)) {
             if ( newValue instanceof String && (
@@ -35,16 +38,22 @@ public class Change
                     field.equals(Field.TEMPSTABILITY) ||
                     field.equals(Field.STORAGEPLACE) ||
                     field.equals(Field.ADDITIONALINFO) )
-            )
-                newString = (String) newValue;
+            ) newString = (String) newValue;
             else if ( newValue instanceof Float && field.equals(Field.AMOUNT)) newFloat = (Float) newValue;
             else if ( newValue instanceof Boolean && field.equals(Field.ARGON)) newBoolean = (Boolean) newValue;
             else throw new IllegalArgumentException("Value type and Field are not consistent when ActionType.EDIT.");
         }
-        swipeValues();
+        swipeEditedValues();
+        swipeRemoveFlag();
     }
 
     void swipeValues() {
+        swipeEditedValues();
+        swipeRemoveFlag();
+        swipeInsertionFlag();
+    }
+
+    private void swipeEditedValues() {
         try {
             if ( actionType.equals(ActionType.EDIT) ) {
                 Compound compound = (Compound) mapOfCompounds.values().toArray()[0];
@@ -101,25 +110,32 @@ public class Change
                     compound.setAdditionalInfo(newString);
                     newString = swipeString;
                 }
-                else
-                    throw new IOException("Value type and Field are not consistent when ActionType.EDIT.");
-                LocalDateTime oldModificationTime = compound.getDateTimeModification();
-                compound.setDateTimeModification(newModificationTime);
-                newModificationTime = oldModificationTime;
+                else throw new IOException("Value type and Field are not consistent when ActionType.EDIT.");
+                LocalDateTime modificationTime = compound.getDateTimeModification();
+                if (modificationTime.equals(oldModificationTime)) compound.setDateTimeModification(newModificationTime);
+                else compound.setDateTimeModification(oldModificationTime);
             }
-            if (actionType.equals( ActionType.REMOVE )) {
-                mapOfCompounds.forEach( (index, compound1) -> {
-                    if (compound1.isToDelete()) compound1.setToDelete(false);
-                    else compound1.setToDelete(true);
-                });
-            }
-            if (actionType.equals( ActionType.INSERT )) {
-                mapOfCompounds.forEach( (index, compound1) -> {
-                    if (compound1.isSavedInDatabase()) compound1.setSavedInDatabase(false);
-                    else compound1.setSavedInDatabase(true);
-                });
-            }
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void swipeRemoveFlag() {
+        if (actionType.equals( ActionType.REMOVE )) {
+            mapOfCompounds.forEach( (index, compound1) -> {
+                if (compound1.isToDelete()) compound1.setToDelete(false);
+                else compound1.setToDelete(true);
+            });
+        }
+    }
+
+    private void swipeInsertionFlag() {
+        if (actionType.equals( ActionType.INSERT )) {
+            mapOfCompounds.forEach( (index, compound1) -> {
+                if (compound1.isSavedInDatabase()) compound1.setSavedInDatabase(false);
+                else compound1.setSavedInDatabase(true);
+            });
+        }
     }
 
     public ActionType getActionType() { return actionType; }

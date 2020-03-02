@@ -18,12 +18,14 @@ public class BufferExecutor implements Buffer, BufferState
     private static MenuItem menuFileSave;
     private static BufferedListOfChanges bufferedListOfChanges;
 
+    /*
     public static BufferExecutor getBufferExecutor() throws IllegalArgumentException {
         if (bufferedListOfChanges == null)
             throw new IllegalArgumentException("You should set TableView<Compound> and " +
                     "ObservableList<Compound> arguments first");
         return new BufferExecutor();
     }
+     */
 
     public static BufferExecutor getBufferExecutor( TableView<Compound> tableView,
                                                     ObservableList<Compound> observableListOfCompounds,
@@ -40,19 +42,12 @@ public class BufferExecutor implements Buffer, BufferState
     @Override
     public <T> void addChange(ActionType actionType, Map<Integer, Compound> mapOfCompounds, Field field, T newValue) {
         bufferedListOfChanges.addChange(actionType,mapOfCompounds,field,newValue);
-        if (actionType.equals(ActionType.REMOVE)) {
-            observableList.removeAll( mapOfCompounds.values() );
-            mainSceneTableView.refresh(); //  TODO sprawdzić czy automatycznie po usunięciu danych compoundów tabela się odświeży
-        }
-        if (actionType.equals(ActionType.INSERT)) // TODO tego nie trzeba bo dodają do observableList tabela odświerza się automatycznie?
-            mainSceneTableView.refresh(); // TODO sprawdzić czy automatycznie po usunięciu danych compoundów tabela się odświeży
+        if (actionType.equals(ActionType.REMOVE)) observableList.removeAll(mapOfCompounds.values());
         checkUndoRedoMenuItems();
     }
 
     @Override
-    public void undo() {
-        if ( bufferedListOfChanges.returnCurrentIndex() > 0 ) executeUndoOrRedo(true);
-    }
+    public void undo() { if (bufferedListOfChanges.returnCurrentIndex() > 0) executeUndoOrRedo(true); }
 
     @Override
     public void redo() {
@@ -60,22 +55,27 @@ public class BufferExecutor implements Buffer, BufferState
     }
 
     private void executeUndoOrRedo(boolean executeUndo) {
-        ActionType actionType;//= bufferedListOfChanges.getActionTypeOfCurrentOperation(); //redo i undo zmieniają nam numer indexu dlatego wyłuskanie actiontype musi być wykonane najpierw.
+        ActionType actionType;
         Map<Integer, Compound> mapOfCompoundsToChangeInTableView;
         if (executeUndo) {
-            mapOfCompoundsToChangeInTableView = bufferedListOfChanges.undo(); // here we change inner index
+            mapOfCompoundsToChangeInTableView = bufferedListOfChanges.undo();
             actionType = bufferedListOfChanges.getActionTypeOfCurrentOperation();
         }
         else {
             actionType = bufferedListOfChanges.getActionTypeOfCurrentOperation();
-            mapOfCompoundsToChangeInTableView = bufferedListOfChanges.redo(); // here we change inner index
+            mapOfCompoundsToChangeInTableView = bufferedListOfChanges.redo();
         }
-        if ( actionType.equals(ActionType.REMOVE) || actionType.equals(ActionType.INSERT) ) {
+        if ( actionType.equals(ActionType.REMOVE) ) { // TUTaj trzeba sprawdzić czy nie leży problem z insertemn
             boolean arAllToDelete = mapOfCompoundsToChangeInTableView.values().stream().allMatch( Compound::isToDelete ); // TODO to może powodować problemy sprawdzić w metodzie swipe czy wartość
-            if ( arAllToDelete ) observableList.removeAll( mapOfCompoundsToChangeInTableView.values() );// TODO jest poprawnie zmieniana.
+            if ( arAllToDelete ) observableList.removeAll( mapOfCompoundsToChangeInTableView.values() ); // id to delete odnosi się tylko do remove nie odnosi dię do insertu.
             else mapOfCompoundsToChangeInTableView.forEach( (index, compound) -> observableList.add(index, compound) );
         }
-        mainSceneTableView.refresh();
+        if (actionType.equals(ActionType.INSERT)) {
+            Compound compound = (Compound) mapOfCompoundsToChangeInTableView.values().toArray()[0];
+            boolean savedInDatabase = compound.isSavedInDatabase();
+            if (savedInDatabase) observableList.remove(compound);
+            else mapOfCompoundsToChangeInTableView.forEach( (index, comp) -> observableList.add(index, comp) );
+        }
         checkUndoRedoMenuItems();
     }
 
@@ -83,9 +83,8 @@ public class BufferExecutor implements Buffer, BufferState
 
     }
 
-
-    // TODO to tez jeszcze raaz sprawzicć
     private void checkUndoRedoMenuItems() {
+        mainSceneTableView.refresh();
         if (bufferedListOfChanges.getBufferSize() == 0) {
             menuEditUndo.setDisable(true);
             menuEditRedo.setDisable(true);

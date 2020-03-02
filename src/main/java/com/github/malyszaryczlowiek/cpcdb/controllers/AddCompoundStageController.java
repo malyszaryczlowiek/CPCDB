@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
@@ -116,7 +117,7 @@ public class AddCompoundStageController implements Initializable
         String storagePlace = storagePlaceTextArea.getText();
         String additionalInformation = additionalInfoTextArea.getText();
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         Compound compound = new Compound(smiles, compoundNumber,amount,
                 Unit.stringToEnum(unit), form, TempStability.stringToEnum(stability),
                 argon, container, storagePlace, now, additionalInformation);

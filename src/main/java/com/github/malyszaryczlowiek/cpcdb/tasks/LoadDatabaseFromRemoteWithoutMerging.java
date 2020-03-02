@@ -102,7 +102,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
             while(resultSet.next()) {
                 int id = resultSet.getInt(1);
                 String smiles = resultSet.getString(2);
-                String compoundName = resultSet.getString(3);
+                String compoundNumber = resultSet.getString(3);
                 float amount = resultSet.getFloat(4);
                 String unit = resultSet.getString(5);
                 String form = resultSet.getString(6);
@@ -112,7 +112,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
                 String storagePlace = resultSet.getString(10);
                 LocalDateTime dateTimeModification = resultSet.getTimestamp(11).toLocalDateTime();
                 String additionalInformation = resultSet.getString(12);
-                Compound compound = new Compound(smiles, compoundName, amount, Unit.stringToEnum(unit),
+                Compound compound = new Compound(smiles, compoundNumber, amount, Unit.stringToEnum(unit),
                         form, TempStability.stringToEnum(tempStability), argon, container,
                         storagePlace, dateTimeModification, additionalInformation);
                 compound.setId(id);

@@ -19,10 +19,6 @@ public class BufferedListOfChanges implements BufferState
             listOfChanges = new ArrayList<>();
         return new BufferedListOfChanges();
     }
-    // TODO 1. zrobić jeszcze checking całej klasy i można spróbować uruchomić wszystko na nowo.
-    // TODO 2. Sprawdzić też klasę Change
-    //  ale bez sejwowania bo to jeszcze trzeba zaimplementować.
-
 
     @Override
     public synchronized <T> void addChange(ActionType actionType, Map<Integer,Compound> mapOfCompounds, Field field, T newValue) {

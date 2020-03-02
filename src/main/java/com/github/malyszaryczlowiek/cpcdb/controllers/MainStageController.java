@@ -298,6 +298,7 @@ public class MainStageController implements Initializable,
             bufferExecutor.saveChangesToDatabase();  // robię save
         // TODO tutaj trzeba uruchomić oddzielny task do zapisania nowych zmian bo każde wywołanie zapytania do bazy danych
         // powinno być wykonane w oddzielnym wątku tak aby nie blokować głównego.
+        // TODO ale powinno używać locka tak aby wątek główny nie został zamknięty zbyt szybko
     }
 
     @FXML

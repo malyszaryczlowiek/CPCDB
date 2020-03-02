@@ -11,9 +11,8 @@ import javafx.scene.control.TableView;
 import java.util.Map;
 import java.util.TreeMap;
 
-public  class ColumnInitializer //implements Initializable
+public  class ColumnInitializer
 {
-     //protected static ChangesDetector changesDetector;
      protected static BufferExecutor bufferExecutor;
      protected static TableView<Compound> mainSceneTableView;
      protected static ObservableList<Compound> observableList;
