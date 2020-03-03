@@ -1,7 +1,7 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
-import com.github.malyszaryczlowiek.cpcdb.newBuffer.ActionType;
-import com.github.malyszaryczlowiek.cpcdb.newBuffer.BufferExecutor;
+import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
+import com.github.malyszaryczlowiek.cpcdb.buffer.BufferExecutor;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadingDatabase;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
 import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
@@ -43,7 +43,6 @@ import java.util.*;
 public class MainStageController implements Initializable,
         AddCompoundStageController.CompoundAddedListener, // Added live updating of TableView using
         SearchCompoundStageController.SearchingCriteriaChosenListener,
-        EditCompoundStageController.EditChangesStageListener,
         AskToSaveChangesBeforeQuitController.SaveOrCancelListener,
         MergingRemoteDbController.Mergeable
 {
@@ -474,23 +473,6 @@ public class MainStageController implements Initializable,
     }
 
     @Override
-    public void reloadTableAfterCompoundEdition() { mainSceneTableView.refresh(); }
-
-    /**
-     * Method implemented from EditCompoundStageController.EditChangesStageListener interface
-     * @param compound Compound to delete
-     */
-    @Override
-    public void reloadTableAfterCompoundDeleting(Compound compound) {
-        Map<Integer, Compound> compoundToDelete = new TreeMap<>();
-        var index =  observableList.indexOf(compound);
-        compoundToDelete.put(index, compound );
-        bufferExecutor.addChange(ActionType.REMOVE, compoundToDelete, null, null); // robię remove
-        //observableList.remove(compound);
-        //mainSceneTableView.refresh();
-    }
-
-    @Override
     public void onSaveChangesAndCloseProgram() {
         LaunchTimer closeTimer = new LaunchTimer();
         Task<Void> task1 = new Task<>()
@@ -618,8 +600,8 @@ public class MainStageController implements Initializable,
      */
     @Override
     public void loadFromRemoteWithoutMerging() {
-        Task<Void> mergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(progressValue, fullListOfCompounds,
-                observableList, mainSceneTableView);
+        Task<Void> mergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(
+                progressValue, fullListOfCompounds, observableList, mainSceneTableView);
         mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
                 currentStatusManager.setCurrentStatus(newMessage)
         );

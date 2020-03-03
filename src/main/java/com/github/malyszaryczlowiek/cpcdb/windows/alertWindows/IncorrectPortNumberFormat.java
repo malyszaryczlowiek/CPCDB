@@ -12,7 +12,5 @@ class IncorrectPortNumberFormat extends AlertWindow
     }
 
     @Override
-    public void show() {
-        alert.showAndWait();
-    }
+    public void show() { alert.showAndWait(); }
 }

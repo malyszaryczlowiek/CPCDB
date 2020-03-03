@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.newBuffer;
+package com.github.malyszaryczlowiek.cpcdb.buffer;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
@@ -21,7 +21,7 @@ public class Change
     private LocalDateTime oldModificationTime;
     private Boolean newBoolean;
 
-    <T> Change(ActionType actionType, Map<Integer,Compound> mapOfCompounds, Field field, T newValue) throws IllegalArgumentException {
+    public <T> Change(ActionType actionType, Map<Integer,Compound> mapOfCompounds, Field field, T newValue) throws IllegalArgumentException {
         this.actionType = actionType;
         this.mapOfCompounds = mapOfCompounds;
         this.field = field;
@@ -51,6 +51,15 @@ public class Change
         swipeEditedValues();
         swipeRemoveFlag();
         swipeInsertionFlag();
+    }
+
+    void swipeModificationDate() {
+        if (actionType.equals(ActionType.EDIT)) {
+            Compound compound = (Compound) mapOfCompounds.values().toArray()[0];
+            LocalDateTime modificationTime = compound.getDateTimeModification();
+            if (modificationTime.equals(oldModificationTime)) compound.setDateTimeModification(newModificationTime);
+            else compound.setDateTimeModification(oldModificationTime);
+        }
     }
 
     private void swipeEditedValues() {
@@ -111,9 +120,6 @@ public class Change
                     newString = swipeString;
                 }
                 else throw new IOException("Value type and Field are not consistent when ActionType.EDIT.");
-                LocalDateTime modificationTime = compound.getDateTimeModification();
-                if (modificationTime.equals(oldModificationTime)) compound.setDateTimeModification(newModificationTime);
-                else compound.setDateTimeModification(oldModificationTime);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -16,7 +16,7 @@ class EditCompoundWindow implements ShowAble
 {
     private Stage showEditStage;
 
-    EditCompoundWindow(MainStageController mainStageController, Compound selectedCompound) throws IOException {
+    EditCompoundWindow(Compound selectedCompound) throws IOException {
         showEditStage = new Stage();
         FXMLLoader loader = new FXMLLoader(getClass().getResource("showEditCompoundStage.fxml"));
         Parent root = loader.load();
@@ -31,7 +31,6 @@ class EditCompoundWindow implements ShowAble
         showEditStage.sizeToScene();
         controller.setStage(showEditStage);
         controller.setSelectedItem(selectedCompound);
-        controller.setListener(mainStageController);
     }
 
     @Override

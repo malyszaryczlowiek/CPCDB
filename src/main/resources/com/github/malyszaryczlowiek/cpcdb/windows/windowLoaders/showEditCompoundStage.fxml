@@ -9,11 +9,10 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="355.0" prefWidth="755.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.EditCompoundStageController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="355.0" prefWidth="755.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.github.malyszaryczlowiek.cpcdb.controllers.EditCompoundStageController">
     <children>
-        <Button fx:id="cancelButtonShowEdit" layoutX="330.0" layoutY="554.0" mnemonicParsing="false" onAction="#onCancelButtonClicked" prefHeight="25.0" prefWidth="125.0" text="Cancel" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="280.0" />
-      <Button layoutX="465.0" layoutY="554.0" mnemonicParsing="false" onAction="#onSaveAndCloseButtonClicked" prefHeight="25.0" prefWidth="125.0" text="Save And Close" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="145.0" />
-        <Button fx:id="saveButtonShowEdit" layoutX="602.0" layoutY="554.0" mnemonicParsing="false" onAction="#onSaveButtonClicked" prefHeight="25.0" prefWidth="125.0" text="Save" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
+        <Button  layoutX="330.0" layoutY="554.0" mnemonicParsing="false" onAction="#onCancelButtonClicked" prefHeight="25.0" prefWidth="125.0" text="Cancel" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="145.0" />
+        <Button layoutX="602.0" layoutY="554.0" mnemonicParsing="false" onAction="#onSaveButtonClicked" prefHeight="25.0" prefWidth="125.0" text="Save" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0" />
         <Label layoutX="34.0" layoutY="30.0" prefHeight="25.0" text="Smiles:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
         <Label layoutX="20.0" layoutY="52.0" prefHeight="25.0" text="Compound Number:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="45.0" />
         <Label layoutX="288.0" layoutY="52.0" prefHeight="25.0" prefWidth="60.0" text="Amount:" AnchorPane.rightAnchor="385.0" AnchorPane.topAnchor="45.0" />
@@ -35,7 +34,7 @@
         <Separator layoutX="275.0" layoutY="47.0" orientation="VERTICAL" prefHeight="25.0" prefWidth="10.0" AnchorPane.rightAnchor="445.0" AnchorPane.topAnchor="45.0" />
         <Separator layoutX="475.0" layoutY="47.0" orientation="VERTICAL" prefHeight="25.0" prefWidth="10.0" AnchorPane.rightAnchor="255.0" AnchorPane.topAnchor="45.0" />
         <Separator layoutX="669.0" layoutY="47.0" orientation="VERTICAL" prefHeight="25.0" prefWidth="10.0" AnchorPane.rightAnchor="75.0" AnchorPane.topAnchor="45.0" />
-      <Button layoutX="168.0" layoutY="554.0" mnemonicParsing="false" onAction="#onDeleteCompoundClicked" text="Delete Compound" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="415.0" />
-      <Separator layoutX="315.0" layoutY="554.0" orientation="VERTICAL" prefHeight="25.0" prefWidth="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="405.0" />
+      <Button layoutX="168.0" layoutY="554.0" mnemonicParsing="false" onAction="#onDeleteCompoundClicked" text="Delete Compound" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="285.0" />
+      <Separator layoutX="315.0" layoutY="554.0" orientation="VERTICAL" prefHeight="25.0" prefWidth="10.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="270.0" />
     </children>
 </AnchorPane>

@@ -39,6 +39,12 @@ public class ShortAlertWindowFactory
             case INCORRECT_LOCAL_DB_AUTHORISATION:
                 new IncorrectLocalDbAuthorisation(Alert.AlertType.ERROR).show();
                 break;
+            case INCORRECT_NUMBER_FORMAT:
+                new IncorrectNumberFormat(Alert.AlertType.ERROR).show();
+                break;
+            case INCORRECT_SMILES:
+                new IncorrectSmiles(Alert.AlertType.ERROR).show();
+                break;
             default:
                 break;
         }

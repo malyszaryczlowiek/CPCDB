@@ -2,8 +2,8 @@ package com.github.malyszaryczlowiek.cpcdb.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
-import com.github.malyszaryczlowiek.cpcdb.newBuffer.ActionType;
-import com.github.malyszaryczlowiek.cpcdb.newBuffer.BufferExecutor;
+import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
+import com.github.malyszaryczlowiek.cpcdb.buffer.BufferExecutor;
 
 import javafx.collections.ObservableList;
 import javafx.scene.control.TableView;

@@ -17,7 +17,7 @@ public class WindowFactory
                     new ColumnManagerWindow().show();
                     break;
                 case EDIT_COMPOUND_WINDOW:
-                    new EditCompoundWindow(mainStageController, compoundToOperateWith).show();
+                    new EditCompoundWindow(compoundToOperateWith).show();
                     break;
                 case INITIALIZING_DB_PROPERTIES_WINDOW:
                     new InitializingDBPropertiesWindow().show();

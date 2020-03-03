@@ -2,17 +2,12 @@ package com.github.malyszaryczlowiek.cpcdb.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
-import com.github.malyszaryczlowiek.cpcdb.newBuffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class CompoundNumberInitializer extends ColumnInitializer implements Initializable
 {

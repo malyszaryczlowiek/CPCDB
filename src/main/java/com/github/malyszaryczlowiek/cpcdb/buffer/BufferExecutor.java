@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.newBuffer;
+package com.github.malyszaryczlowiek.cpcdb.buffer;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
@@ -8,6 +8,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
 import java.util.Map;
+import java.util.Set;
 
 public class BufferExecutor implements Buffer, BufferState
 {
@@ -18,14 +19,13 @@ public class BufferExecutor implements Buffer, BufferState
     private static MenuItem menuFileSave;
     private static BufferedListOfChanges bufferedListOfChanges;
 
-    /*
+
     public static BufferExecutor getBufferExecutor() throws IllegalArgumentException {
         if (bufferedListOfChanges == null)
             throw new IllegalArgumentException("You should set TableView<Compound> and " +
                     "ObservableList<Compound> arguments first");
         return new BufferExecutor();
     }
-     */
 
     public static BufferExecutor getBufferExecutor( TableView<Compound> tableView,
                                                     ObservableList<Compound> observableListOfCompounds,
@@ -43,6 +43,12 @@ public class BufferExecutor implements Buffer, BufferState
     public <T> void addChange(ActionType actionType, Map<Integer, Compound> mapOfCompounds, Field field, T newValue) {
         bufferedListOfChanges.addChange(actionType,mapOfCompounds,field,newValue);
         if (actionType.equals(ActionType.REMOVE)) observableList.removeAll(mapOfCompounds.values());
+        checkUndoRedoMenuItems();
+    }
+
+    @Override
+    public void addSetOfChanges(Set<Change> changeSet) {
+        bufferedListOfChanges.addSetOfChanges(changeSet);
         checkUndoRedoMenuItems();
     }
 
@@ -112,4 +118,8 @@ public class BufferExecutor implements Buffer, BufferState
 
     @Override
     public int returnCurrentIndex() { return bufferedListOfChanges.returnCurrentIndex(); }
+
+    public int getIndexOfCompound(Compound compound) {
+        return observableList.indexOf(compound);
+    }
 }

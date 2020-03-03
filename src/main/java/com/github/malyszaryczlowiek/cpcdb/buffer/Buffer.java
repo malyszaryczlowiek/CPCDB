@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.newBuffer;
+package com.github.malyszaryczlowiek.cpcdb.buffer;
 
 public interface Buffer
 {
