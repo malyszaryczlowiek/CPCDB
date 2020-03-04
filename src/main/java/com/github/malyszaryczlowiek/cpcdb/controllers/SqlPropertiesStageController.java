@@ -57,16 +57,12 @@ public class SqlPropertiesStageController implements Initializable
 
     @FXML
     protected void onSaveButtonClicked() {
-
         LaunchTimer timer = new LaunchTimer();
-        //timer.startTimer();
-
         String remotePortNumberString = remotePortNumber.getText();
         String localPortNumberString = localPortNumber.getText();
         try {
             Integer.parseInt( remotePortNumberString );
-            if ( !localPortNumberString.equals("") )
-                Integer.parseInt( localPortNumberString );
+            if ( !localPortNumberString.equals("") ) Integer.parseInt( localPortNumberString );
         }
         catch (NumberFormatException e) {
             e.printStackTrace();
@@ -74,22 +70,16 @@ public class SqlPropertiesStageController implements Initializable
             return;
         }
         SecureProperties.loadProperties();
-
         settingUpRemoteServerConfiguration();
         settingUpLocalServerConfiguration();
         setUpStartingPropertiesOfAllColumns();
         CloseProgramNotifier.setToNotCloseProgram();
-
         timer.stopTimer("Loading properties when Save Button Clicked during initialization ");
-
         thisStage.close();
     }
-
 
     @FXML
-    protected void onCancelButtonClicked() {
-        thisStage.close();
-    }
+    protected void onCancelButtonClicked() { thisStage.close(); }
 
     @FXML
     protected void useRemoteServerConnectorCheckBoxClicked() {
@@ -122,54 +112,43 @@ public class SqlPropertiesStageController implements Initializable
     }
 
     private void settingUpRemoteServerConfiguration() { // Ustawianie zdalnego servera
-        SecureProperties.setProperty("settings.db.remote.RDBMS", "mysql");
-
         String remoteServerAddressIPString = remoteServerAddressIP.getText();
         String remotePortNumberString = remotePortNumber.getText();
         String remoteUserNameString = remoteUser.getText();
         String remotePassphraseString = remotePassphrase.getText();
 
+        SecureProperties.setProperty("settings.db.remote.RDBMS", "mysql");
+        SecureProperties.setProperty("remoteDBExists", "false");
         SecureProperties.setProperty("settings.db.remote.serverAddressIP", remoteServerAddressIPString);
         SecureProperties.setProperty("settings.db.remote.portNumber", remotePortNumberString);
         SecureProperties.setProperty("settings.db.remote.user", remoteUserNameString);
         SecureProperties.setProperty("settings.db.remote.passphrase", remotePassphraseString);
 
         // Ustawianie zdalnego connectora
-
         boolean remoteConnectorConfigurationUseUnicode = remoteUseUnicode.isSelected();
         boolean remoteConnectorConfigurationUseJDBCCompilantTimezoneShift = remoteUseJDBCCompilantTimeZone.isSelected();
         boolean remoteConnectorConfigurationUseLegacyDateTimeCode = remoteUseLegacyDatetimeMode.isSelected();
+
         String remoteConnectorConfigurationServerTimezone = remoteServerTimeZone.getValue();
-
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings",
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings",
                 Boolean.toString( remoteServerConnectorSettingsCheckBox.isSelected() ));
-
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useUnicode",
-                Boolean.toString( remoteConnectorConfigurationUseUnicode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift",
-                Boolean.toString( remoteConnectorConfigurationUseJDBCCompilantTimezoneShift )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode",
-                Boolean.toString( remoteConnectorConfigurationUseLegacyDateTimeCode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.serverTimezone",
-                remoteConnectorConfigurationServerTimezone
-        );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useUnicode",
+                Boolean.toString( remoteConnectorConfigurationUseUnicode ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift",
+                Boolean.toString( remoteConnectorConfigurationUseJDBCCompilantTimezoneShift ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode",
+                Boolean.toString( remoteConnectorConfigurationUseLegacyDateTimeCode ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.serverTimezone",
+                remoteConnectorConfigurationServerTimezone );
     }
 
     private void settingUpLocalServerConfiguration() {
-        SecureProperties.setProperty("settings.db.local.RDBMS", "mysql");
-
         String localPortNumberString = localPortNumber.getText().trim();
         String localUserNameString = localUser.getText().trim();
         String localPassphraseString = localPassphrase.getText().trim();
 
+        SecureProperties.setProperty("settings.db.local.RDBMS", "mysql");
+        SecureProperties.setProperty("localDBExists", "false");
         SecureProperties.setProperty("settings.db.local.serverAddressIP", "localhost");
         SecureProperties.setProperty("settings.db.local.portNumber", localPortNumberString);
         SecureProperties.setProperty("settings.db.local.user", localUserNameString);
@@ -178,28 +157,18 @@ public class SqlPropertiesStageController implements Initializable
         boolean localConnectorConfigurationUseUnicode = localUseUnicode.isSelected();
         boolean localConnectorConfigurationUseJDBCCompilantTimezoneShift = localUseJDBCCompilantTimeZone.isSelected();
         boolean localConnectorConfigurationUseLegacyDateTimeCode = localUseLegacyDatetimeMode.isSelected();
-        String localConnectorConfigurationServerTimezone = localServerTimeZone.getValue();
 
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings",
-                Boolean.toString( localServerConnectorSettingsCheckBox.isSelected() )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useUnicode",
-                Boolean.toString( localConnectorConfigurationUseUnicode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift",
-                Boolean.toString( localConnectorConfigurationUseJDBCCompilantTimezoneShift )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useLegacyDateTimeCode",
-                Boolean.toString( localConnectorConfigurationUseLegacyDateTimeCode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.serverTimezone",
-                localConnectorConfigurationServerTimezone
-        );
+        String localConnectorConfigurationServerTimezone = localServerTimeZone.getValue();
+        SecureProperties.setProperty(  "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings",
+                Boolean.toString( localServerConnectorSettingsCheckBox.isSelected() ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useUnicode",
+                Boolean.toString( localConnectorConfigurationUseUnicode ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift",
+                Boolean.toString( localConnectorConfigurationUseJDBCCompilantTimezoneShift ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useLegacyDateTimeCode",
+                Boolean.toString( localConnectorConfigurationUseLegacyDateTimeCode ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.serverTimezone",
+                localConnectorConfigurationServerTimezone );
     }
 
     private void setUpStartingPropertiesOfAllColumns() {
@@ -214,16 +183,10 @@ public class SqlPropertiesStageController implements Initializable
         SecureProperties.setProperty("column.show.StoragePlace", "true");
         SecureProperties.setProperty("column.show.LastModification", "true");
         SecureProperties.setProperty("column.show.AdditionalInfo", "true");
-
-
         SecureProperties.setProperty("settings.fontSize","table-view-size16");
     }
 
-
-
-    public void setStage(Stage stage) {
-        thisStage = stage;
-    }
+    public void setStage(Stage stage) { thisStage = stage; }
 
     //  metoda taka, że nie trzeba za każdym razem wpisywać danych
     private void setInput() {
@@ -231,8 +194,6 @@ public class SqlPropertiesStageController implements Initializable
         remotePortNumber.setText("3306");
         remoteUser.setText("Wa1s8JBvyU");
         remotePassphrase.setText("5YlJQGAuml");
-        //remoteServerConfiguration.setText("");
-
         localPortNumber.setText("3306");
         localUser.setText("root");
         localPassphrase.setText("Janowianka1922?");

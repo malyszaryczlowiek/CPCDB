@@ -35,7 +35,9 @@ class RemoteConnectionHandler implements ConnectionHandler
             return new LocalConnectionHandler().connect();
         }
     }
-    /*
+}
+
+/*
     public Connection connect(Executor executor) {
         Connection CONNECTION;
         ConnectionQueryBuilder remoteConnectionQueryBuilder = new RemoteConnectionQueryBuilder();
@@ -62,7 +64,6 @@ class RemoteConnectionHandler implements ConnectionHandler
         }
     }
      */
-}
 
 
 /* to jest wiadomość gdy nie ma połączenia z interetem

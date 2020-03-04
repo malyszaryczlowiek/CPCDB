@@ -24,6 +24,9 @@ public class ShortAlertWindowFactory
             case INCORRECT_REMOTE_PASSPHRASE:
                 new IncorrectRemotePassphrase(Alert.AlertType.WARNING).show();
                 break;
+            case INCORRECT_REMOTE_DB_AUTHORISATION:
+                new IncorrectRemotePassphrase(Alert.AlertType.ERROR).show();
+                break;
             case UNKNOWN_ERROR_OCCURRED:
                 new UnknownErrorOccurred(Alert.AlertType.ERROR).show();
                 break;

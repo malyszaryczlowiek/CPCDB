@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.db;
+package com.github.malyszaryczlowiek.cpcdb.buffer;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;

@@ -128,7 +128,7 @@ public class MainStageController implements Initializable,
 
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
-            currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus);
+            currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus, progressBar);
             currentStatusManager.setCurrentStatus("Initializing program");
             lockProvider = LockProvider.getLockProvider();
             fullListOfCompounds = new ArrayList<>();
@@ -199,20 +199,18 @@ public class MainStageController implements Initializable,
             Platform.exit();
         } else {
             primaryStage.show();
-            primaryStage.setOnCloseRequest(
-                    windowEvent -> {
-                        windowEvent.consume();
-                        closeProgram();
-                    });
+            primaryStage.setOnCloseRequest( windowEvent -> {
+                windowEvent.consume();
+                closeProgram();
+            });
             mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            mainSceneTableView.setOnContextMenuRequested(
-                    contextMenuEvent -> {
-                        int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
-                        if ( count == 1 ) editSelectedCompoundContext.setDisable(false); // Edit Selected Compound
-                        else editSelectedCompoundContext.setDisable(true);
-                        if ( count >= 1 ) deleteSelectedCompoundsContext.setDisable(false);//Delete Selected Compound(s)
-                        else deleteSelectedCompoundsContext.setDisable(true);
-                    });
+            mainSceneTableView.setOnContextMenuRequested( contextMenuEvent -> {
+                int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
+                if ( count == 1 ) editSelectedCompoundContext.setDisable(false); // Edit Selected Compound
+                else editSelectedCompoundContext.setDisable(true);
+                if ( count >= 1 ) deleteSelectedCompoundsContext.setDisable(false);//Delete Selected Compound(s)
+                else deleteSelectedCompoundsContext.setDisable(true);
+            });
         }
         synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
             progressValue.setValue( progressValue.get() + 0.3);
@@ -230,10 +228,8 @@ public class MainStageController implements Initializable,
                 menuViewFullScreen, menuHelpAboutCPCDB, menuFileLoadDataFromRemoteServer);
         menuViewFullScreen.setSelected(false);
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
-            if (!unblockingTask3)
-                unblockingTask3 = true;
-            else
-                lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
+            if (!unblockingTask3) unblockingTask3 = true;
+            else lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
         }
     }
 
@@ -243,10 +239,8 @@ public class MainStageController implements Initializable,
         new ArgonColumnInitializer(argonCol).initialize();
         new ContainerColumnInitializer(containerCol).initialize();
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
-            if (!unblockingTask3)
-                unblockingTask3 = true;
-            else
-                lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
+            if (!unblockingTask3) unblockingTask3 = true;
+            else lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
         }
     }
 
@@ -258,9 +252,8 @@ public class MainStageController implements Initializable,
             synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).wait();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+        catch (InterruptedException e) { e.printStackTrace(); }
         boolean areAllColumnsVisible = columnManager.areAllColumnsVisible();
         menuViewShowAllColumns.setDisable(areAllColumnsVisible);
         showAllColumnsContext.setDisable(areAllColumnsVisible);
@@ -275,16 +268,14 @@ public class MainStageController implements Initializable,
 
    // FILE -> Add Compound
     @FXML
-    protected void menuFileAddCompound(ActionEvent event) {
+    protected void menuFileAddCompound() {
         WindowFactory.showWindow(WindowsEnum.ADD_COMPOUND_WINDOW, this, null);
-        event.consume();
     }
 
     // FILE -> Search
     @FXML
-    protected void onFileSearchMenuItemClicked(ActionEvent actionEvent) {
+    protected void onFileSearchMenuItemClicked() {
         WindowFactory.showWindow(WindowsEnum.SEARCH_COMPOUND_WINDOW, null, null);
-        actionEvent.consume();
     }
 
     // FILE -> Save
@@ -293,17 +284,15 @@ public class MainStageController implements Initializable,
      */
     @FXML
     protected void onMenuFileSaveClicked() {
-        if ( bufferExecutor.returnCurrentIndex() > 0 )
-            bufferExecutor.saveChangesToDatabase();  // robię save
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);  // robię save
         // TODO tutaj trzeba uruchomić oddzielny task do zapisania nowych zmian bo każde wywołanie zapytania do bazy danych
         // powinno być wykonane w oddzielnym wątku tak aby nie blokować głównego.
         // TODO ale powinno używać locka tak aby wątek główny nie został zamknięty zbyt szybko
     }
 
     @FXML
-    protected void onMenuFilePreferencesClicked(ActionEvent event) {
+    protected void onMenuFilePreferencesClicked() {
         WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
-        event.consume();
     }
 
     @FXML
@@ -328,9 +317,7 @@ public class MainStageController implements Initializable,
     // FILE -> Quit
 
     @FXML
-    protected void onMenuFileQuit() {
-        closeProgram();
-    }
+    protected void onMenuFileQuit() { closeProgram(); }
 
     // EDIT
 
@@ -345,31 +332,16 @@ public class MainStageController implements Initializable,
         else menuEditDeleteSelectedCompounds.setDisable(true);
     }
 
-        /*  to jest przeniesione do bufferExeutora
-        // Edit -> Undo
-        if ( bufferExecutor.returnCurrentIndex() > 0 ) menuEditUndo.setDisable(false);
-        else menuEditUndo.setDisable(true);
-
-        // Edit -> Redo
-        if ( bufferExecutor.isNothingToRedo() ) menuEditRedo.setDisable(false);
-        else menuEditRedo.setDisable(true);
-        */
     // EDIT -> Undo
 
     @FXML
-    protected void onUndoClicked() {
-        bufferExecutor.undo();
-    } // robię undo
+    protected void onUndoClicked() { bufferExecutor.undo(); } // robię undo
 
     @FXML
-    protected void onRedoClicked() {
-        bufferExecutor.redo();
-    } // robię redo
+    protected void onRedoClicked() { bufferExecutor.redo(); } // robię redo
 
     @FXML
-    protected void onMenuEditSelectAll() {
-        mainSceneTableView.getSelectionModel().selectAll();
-    }
+    protected void onMenuEditSelectAll() { mainSceneTableView.getSelectionModel().selectAll(); }
 
     // VIEW -> Full Screen
 
@@ -389,15 +361,12 @@ public class MainStageController implements Initializable,
     // VIEW -> SHOW -> Show All Columns
 
     @FXML
-    protected void onMenuShowAllColumns() {
-        columnManager.onShowHideAllColumns();
-    }
+    protected void onMenuShowAllColumns() { columnManager.onShowHideAllColumns(); }
 
 
     @FXML
     protected void showEditCompoundStage() {
-        Compound selectedItems = mainSceneTableView.getSelectionModel()
-                .getSelectedItems().get(0);
+        Compound selectedItems = mainSceneTableView.getSelectionModel().getSelectedItems().get(0);
         WindowFactory.showWindow(WindowsEnum.EDIT_COMPOUND_WINDOW, this, selectedItems);
     }
 
@@ -454,7 +423,7 @@ public class MainStageController implements Initializable,
         ObservableList<Compound> selectedItems = mainSceneTableView.getSelectionModel().getSelectedItems();
         Map<Integer, Compound> mapOfCompounds = new TreeMap<>();
         selectedItems.forEach( compound -> mapOfCompounds.put( observableList.indexOf( compound ), compound ) );
-        bufferExecutor.addChange(ActionType.REMOVE, mapOfCompounds, null, null);// robię remove
+        bufferExecutor.addChange(ActionType.REMOVE, mapOfCompounds, null, null);
         fullListOfCompounds.clear();
         fullListOfCompounds.addAll(observableList.sorted());
         event.consume();
@@ -481,7 +450,7 @@ public class MainStageController implements Initializable,
             protected Void call()
             {
                 LaunchTimer saveTimer = new LaunchTimer();
-                bufferExecutor.saveChangesToDatabase(); // robię save
+                bufferExecutor.saveChangesToDatabase(false); // robię save
                 saveTimer.stopTimer("Save Timer is stopped");
                 return null;
             }
@@ -512,7 +481,6 @@ public class MainStageController implements Initializable,
     @Override
     public void onCloseProgramWithoutChanges() {
         LaunchTimer closeTimer = new LaunchTimer();
-        //saveTableViewsColumnSizesAndOrder();
         setWidthOfColumns();
         SecureProperties.saveProperties();
         closeTimer.stopTimer("closing time when NOT saving changes only properties");
@@ -573,8 +541,6 @@ public class MainStageController implements Initializable,
                 ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
             }
         }
-        //if (text.equals("Connection to Remote Database Established"))
-        //    WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW,this,null);
         currentStatusManager.resetFont();
     }
 

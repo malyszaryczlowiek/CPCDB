@@ -3,7 +3,10 @@ package com.github.malyszaryczlowiek.cpcdb.buffer;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 
+import com.github.malyszaryczlowiek.cpcdb.db.SaveChangesToLocalDatabase;
+import com.github.malyszaryczlowiek.cpcdb.tasks.SaveChangesToRemoteDatabase;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
@@ -18,7 +21,6 @@ public class BufferExecutor implements Buffer, BufferState
     private static MenuItem menuEditRedo;
     private static MenuItem menuFileSave;
     private static BufferedListOfChanges bufferedListOfChanges;
-
 
     public static BufferExecutor getBufferExecutor() throws IllegalArgumentException {
         if (bufferedListOfChanges == null)
@@ -71,9 +73,9 @@ public class BufferExecutor implements Buffer, BufferState
             actionType = bufferedListOfChanges.getActionTypeOfCurrentOperation();
             mapOfCompoundsToChangeInTableView = bufferedListOfChanges.redo();
         }
-        if ( actionType.equals(ActionType.REMOVE) ) { // TUTaj trzeba sprawdzić czy nie leży problem z insertemn
-            boolean arAllToDelete = mapOfCompoundsToChangeInTableView.values().stream().allMatch( Compound::isToDelete ); // TODO to może powodować problemy sprawdzić w metodzie swipe czy wartość
-            if ( arAllToDelete ) observableList.removeAll( mapOfCompoundsToChangeInTableView.values() ); // id to delete odnosi się tylko do remove nie odnosi dię do insertu.
+        if ( actionType.equals(ActionType.REMOVE) ) {
+            boolean arAllToDelete = mapOfCompoundsToChangeInTableView.values().stream().allMatch( Compound::isToDelete );
+            if ( arAllToDelete ) observableList.removeAll( mapOfCompoundsToChangeInTableView.values() );
             else mapOfCompoundsToChangeInTableView.forEach( (index, compound) -> observableList.add(index, compound) );
         }
         if (actionType.equals(ActionType.INSERT)) {
@@ -85,8 +87,23 @@ public class BufferExecutor implements Buffer, BufferState
         checkUndoRedoMenuItems();
     }
 
-    public void saveChangesToDatabase() {
-
+    public void saveChangesToDatabase(boolean startAsDemon) { // TODO tutaj aktualnie jestem Implementuje taski;
+        Task<Void> savingToRemoteDatabaseTask = SaveChangesToRemoteDatabase.getTask();
+        Task<Void> savingToLocalDatabaseTask = SaveChangesToLocalDatabase.getTask();
+        Thread savingToRemoteDatabaseThread = new Thread(savingToRemoteDatabaseTask);
+        Thread savingToLocalDatabaseThread = new Thread(savingToLocalDatabaseTask);
+        if (startAsDemon) {
+            savingToRemoteDatabaseThread.setDaemon(true);
+            savingToLocalDatabaseThread.setDaemon(true);
+        }
+        savingToRemoteDatabaseThread.start();
+        savingToLocalDatabaseThread.start();
+        if (!startAsDemon) {
+            try {
+                savingToRemoteDatabaseThread.join();
+                savingToLocalDatabaseThread.join();
+            } catch (InterruptedException e) { e.printStackTrace(); }
+        }
     }
 
     private void checkUndoRedoMenuItems() {
@@ -119,7 +136,5 @@ public class BufferExecutor implements Buffer, BufferState
     @Override
     public int returnCurrentIndex() { return bufferedListOfChanges.returnCurrentIndex(); }
 
-    public int getIndexOfCompound(Compound compound) {
-        return observableList.indexOf(compound);
-    }
+    public int getIndexOfCompound(Compound compound) { return observableList.indexOf(compound); }
 }

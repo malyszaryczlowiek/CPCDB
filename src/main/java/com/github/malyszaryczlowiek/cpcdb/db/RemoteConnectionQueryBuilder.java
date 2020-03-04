@@ -20,8 +20,7 @@ public class RemoteConnectionQueryBuilder extends ConnectionQueryBuilder
 
     @Override
     void addConnectionConfigurations() {
-        if ( SecureProperties.hasProperty("remoteDBExists") && SecureProperties.getProperty("remoteDBExists").equals("true") )
-            urlBuilder.append(DBNAME); // dodaję nazwę bazy danych, nie tabeli
+        if ( SecureProperties.getProperty("remoteDBExists").equals("true") ) urlBuilder.append(DBNAME); // dodaję nazwę bazy danych, nie tabeli
         if ( SecureProperties
                 .getProperty("settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings")
                 .equals("true") ) {

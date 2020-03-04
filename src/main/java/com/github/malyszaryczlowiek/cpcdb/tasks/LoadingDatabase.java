@@ -67,10 +67,8 @@ public class LoadingDatabase extends Task<String>
      * This method is called only from the main JavaFX application thread
      */
     private void setUpTaskListeners() {
-        this.messageProperty().addListener(
-                (observableValue, oldString, newString) -> manageConnectingToDbCommunicates(newString) );
-        this.valueProperty().addListener(
-                (observable, oldValue, newValue) -> manageConnectingToDbCommunicates(newValue) );
+        this.messageProperty().addListener( (observableValue, oldString, newString) -> manageNewCommunicates(newString) );
+        this.valueProperty().addListener( (observable, oldValue, newValue) -> manageNewCommunicates(newValue) );
         this.titleProperty().addListener( (observable, oldValue, newValue) -> {
             if ("updateLocalDb".equals(newValue)) {
                 Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
@@ -228,9 +226,9 @@ public class LoadingDatabase extends Task<String>
     }
 
     /**
-     * This method is called only from the main JavaFX application thread
+     * This method is called from Main JavaFX thread.
      */
-    private void manageConnectingToDbCommunicates(String newString) {
+    private void manageNewCommunicates(String newString) {
         switch (newString) {
             case "cannotConnectToAllDB":
                 ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
@@ -306,7 +304,7 @@ public class LoadingDatabase extends Task<String>
     }
 
     /**
-     * This method is called only from the main JavaFX application thread
+     * This method is called from Main JavaFX thread.
      */
     private void startService() {
         ScheduledService<Void> databasePingService = PingService.getService(mainStageController);

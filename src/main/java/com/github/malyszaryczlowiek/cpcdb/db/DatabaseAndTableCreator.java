@@ -21,7 +21,7 @@ class DatabaseAndTableCreator
                 "LIMIT 10";
         PreparedStatement checkTableExists = CONNECTION.prepareStatement( checkIfTableExistsInDBSqlQuery );
         ResultSet rs = checkTableExists.executeQuery();
-        if (!rs.last()) { // jeśli nie istnieje stwórz tabelę
+        if (!rs.last()) { // if table does not exist, create it
             final String sqlQueryCreateTable ;
             if ( location.equals(DatabaseLocation.REMOTE)) {
                 sqlQueryCreateTable ="CREATE TABLE " + //"IF NOT EXISTS " +

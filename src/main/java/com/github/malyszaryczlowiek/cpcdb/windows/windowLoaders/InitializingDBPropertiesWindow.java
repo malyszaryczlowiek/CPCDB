@@ -14,8 +14,7 @@ class InitializingDBPropertiesWindow implements ShowAble
     private  Stage sqlPropertiesStage;
 
     InitializingDBPropertiesWindow() throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass()
-                .getResource("sqlLoadingPropertiesStage.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("sqlLoadingPropertiesStage.fxml"));
         Parent root = loader.load();
         // SqlPropertiesStageController controller =
         // (SqlPropertiesStageController) loader.getController();
@@ -30,7 +29,5 @@ class InitializingDBPropertiesWindow implements ShowAble
     }
 
     @Override
-    public void show() {
-        sqlPropertiesStage.showAndWait();
-    }
+    public void show() { sqlPropertiesStage.showAndWait(); }
 }
