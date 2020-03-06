@@ -15,7 +15,7 @@ class RemoteConnectionHandler implements ConnectionHandler
         Connection CONNECTION;
         ConnectionQueryBuilder remoteConnectionQueryBuilder = new RemoteConnectionQueryBuilder();
         remoteConnectionQueryBuilder.addConnectionConfigurations();
-        try {
+        try  {
             CONNECTION = DriverManager.getConnection(
                     remoteConnectionQueryBuilder.getQuery(),
                     SecureProperties.getProperty("settings.db.remote.user"),
@@ -24,18 +24,20 @@ class RemoteConnectionHandler implements ConnectionHandler
             SecureProperties.setProperty("remoteDBExists", "true");
             return CONNECTION;
         }
-        catch ( CommunicationsException e) { //CJCommunicationsException |
+        catch ( CommunicationsException | java.sql.SQLNonTransientConnectionException e) { //CJCommunicationsException |
             e.printStackTrace();
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, e.getMessage());
             return new LocalConnectionHandler().connect();
         }
         catch (SQLException e) {
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, e.getMessage());
             e.printStackTrace();
             return new LocalConnectionHandler().connect();
         }
     }
 }
+
+// java.sql.SQLNonTransientConnectionException: Data source rejected establishment of connection,  message from server: "Too many connections"
 
 /*
     public Connection connect(Executor executor) {

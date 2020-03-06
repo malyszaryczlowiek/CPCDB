@@ -66,7 +66,7 @@ public class SqlPropertiesStageController implements Initializable
         }
         catch (NumberFormatException e) {
             e.printStackTrace();
-            ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_PORT_NUMBER_FORMAT);
+            ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_PORT_NUMBER_FORMAT);
             return;
         }
         SecureProperties.loadProperties();

@@ -86,14 +86,14 @@ public class EditCompoundStageController implements Initializable
         float amount;
         String amountString = amountShowEdit.getText();
         if (!matchesFloatPattern(amountString)) {
-            ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_NUMBER_FORMAT);
+            ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_NUMBER_FORMAT);
             amountShowEdit.requestFocus();
             return;
         }
         else amount = Float.parseFloat(amountString);
         String newSmiles = smilesShowEdit.getText();
         if ( newSmiles == null || newSmiles.equals("")) {
-            ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_SMILES);
+            ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_SMILES);
             smilesShowEdit.requestFocus();
             return;
         }

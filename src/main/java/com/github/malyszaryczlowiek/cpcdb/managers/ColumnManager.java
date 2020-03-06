@@ -2,6 +2,7 @@ package com.github.malyszaryczlowiek.cpcdb.managers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
+import com.github.malyszaryczlowiek.cpcdb.managers.initializers.*;
 import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 
 import javafx.collections.ObservableList;
@@ -88,22 +89,11 @@ public class ColumnManager
                 && mapOfColumnsLocalDateTime.values().stream().allMatch( TableColumnBase::isVisible );
     }
 
-    /*
-    public TableColumn<Compound,?> getColumn(Field field) {
-        return mapOfColumns.get(field);
-    }
-
-    public Map<Field, TableColumn<Compound,?>> getMapOfColumns() {
-        return mapOfColumns;
-    }
-     */
-
-
     public void onShowHideAllColumns() {
         mapOfColumnsString.values().forEach(compoundTableColumn -> compoundTableColumn.setVisible(true));
         mapOfColumnsBoolean.values().forEach(compoundTableColumn -> compoundTableColumn.setVisible(true));
         mapOfColumnsLocalDateTime.values().forEach(compoundTableColumn -> compoundTableColumn.setVisible(true));
-        setAllPropertiesToTrue();
+        setAllColumnVisibilityToTrue();
         menuShowAll.setDisable(true);
         contextMenuShowAll.setDisable(true);
     }
@@ -153,7 +143,52 @@ public class ColumnManager
         });
     }
 
-    private void setAllPropertiesToTrue() {
+    public void initializeColumns(Field... fields) {
+        for (Field field: fields) {
+            switch (field) {
+                case SMILES:
+                    new SmilesColumnInitializer( mapOfColumnsString.get(Field.SMILES) ).initialize(); break;
+                case COMPOUNDNUMBER:
+                    new CompoundNumberInitializer( mapOfColumnsString.get(Field.COMPOUNDNUMBER) ).initialize(); break;
+                case AMOUNT:
+                    new AmountColumnInitializer( mapOfColumnsString.get(Field.AMOUNT) ).initialize(); break;
+                case UNIT:
+                    new UnitColumnInitializer( mapOfColumnsString.get(Field.UNIT) ).initialize(); break;
+                case FORM:
+                    new FormColumnInitializer( mapOfColumnsString.get(Field.FORM) ).initialize(); break;
+                case TEMPSTABILITY:
+                    new TemperatureStabilityColumnInitializer( mapOfColumnsString.get(Field.TEMPSTABILITY) ).initialize(); break;
+                case ARGON:
+                    new ArgonColumnInitializer( mapOfColumnsBoolean.get(Field.ARGON) ).initialize(); break;
+                case CONTAINER:
+                    new ContainerColumnInitializer( mapOfColumnsString.get(Field.CONTAINER) ).initialize(); break;
+                case STORAGEPLACE:
+                    new StoragePlaceColumnInitializer( mapOfColumnsString.get(Field.STORAGEPLACE) ).initialize(); break;
+                case DATETIMEMODIFICATION:
+                    new LastModificationColumnInitializer( mapOfColumnsLocalDateTime.get(Field.DATETIMEMODIFICATION)).initialize(); break;
+                case ADDITIONALINFO:
+                    new AdditionalInfoColumnInitializer( mapOfColumnsString.get(Field.ADDITIONALINFO) ).initialize(); break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public void setAllColumnsWidthToProperties() {
+        SecureProperties.setProperty("column.width.Smiles", String.valueOf( mapOfColumnsString.get(Field.SMILES).getWidth() ));
+        SecureProperties.setProperty("column.width.CompoundName", String.valueOf( mapOfColumnsString.get(Field.COMPOUNDNUMBER).getWidth() )); // TODO zmienić nazwę propertiesa z compoundname na compoundNumber
+        SecureProperties.setProperty("column.width.Amount", String.valueOf( mapOfColumnsString.get(Field.AMOUNT).getWidth() ));
+        SecureProperties.setProperty("column.width.Unit", String.valueOf( mapOfColumnsString.get(Field.UNIT).getWidth() ));
+        SecureProperties.setProperty("column.width.Form", String.valueOf( mapOfColumnsString.get(Field.FORM).getWidth() ));
+        SecureProperties.setProperty("column.width.TemperatureStability", String.valueOf( mapOfColumnsString.get(Field.TEMPSTABILITY).getWidth() ));
+        SecureProperties.setProperty("column.width.Argon", String.valueOf( mapOfColumnsBoolean.get(Field.ARGON).getWidth() ));
+        SecureProperties.setProperty("column.width.Container", String.valueOf( mapOfColumnsString.get(Field.CONTAINER).getWidth() ));
+        SecureProperties.setProperty("column.width.StoragePlace", String.valueOf( mapOfColumnsString.get(Field.STORAGEPLACE).getWidth() ));
+        SecureProperties.setProperty("column.width.LastModification", String.valueOf( mapOfColumnsLocalDateTime.get(Field.DATETIMEMODIFICATION).getWidth() ));
+        SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( mapOfColumnsString.get(Field.ADDITIONALINFO).getWidth() ));
+    }
+
+    private void setAllColumnVisibilityToTrue() {
         SecureProperties.setProperty("column.show.Smiles", "true");
         SecureProperties.setProperty("column.show.CompoundName", "true");
         SecureProperties.setProperty("column.show.Amount", "true");

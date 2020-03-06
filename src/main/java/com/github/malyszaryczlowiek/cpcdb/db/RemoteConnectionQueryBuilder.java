@@ -44,7 +44,5 @@ public class RemoteConnectionQueryBuilder extends ConnectionQueryBuilder
     }
 
     @Override
-    String getQuery() {
-        return urlBuilder.toString();
-    }
+    String getQuery() { return urlBuilder.toString(); }
 }

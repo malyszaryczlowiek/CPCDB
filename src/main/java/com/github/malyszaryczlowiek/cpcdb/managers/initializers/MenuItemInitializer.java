@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.initializers;
+package com.github.malyszaryczlowiek.cpcdb.managers.initializers;
 
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCombination;

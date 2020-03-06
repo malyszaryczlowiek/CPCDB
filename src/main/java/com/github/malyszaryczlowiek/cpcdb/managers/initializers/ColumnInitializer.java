@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.initializers;
+package com.github.malyszaryczlowiek.cpcdb.managers.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
@@ -11,7 +11,7 @@ import javafx.scene.control.TableView;
 import java.util.Map;
 import java.util.TreeMap;
 
-public  class ColumnInitializer
+public class ColumnInitializer
 {
      protected static BufferExecutor bufferExecutor;
      protected static TableView<Compound> mainSceneTableView;

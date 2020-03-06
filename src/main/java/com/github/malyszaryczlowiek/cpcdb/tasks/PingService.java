@@ -24,9 +24,7 @@ public class PingService extends ScheduledService<Void>
         return thisService;
     }
 
-    private PingService(MainStageController mainStageController) {
-        this.mainStageController = mainStageController;
-    }
+    private PingService(MainStageController mainStageController) { this.mainStageController = mainStageController; }
 
     @Override
     protected Task<Void> createTask() {
@@ -34,11 +32,8 @@ public class PingService extends ScheduledService<Void>
             @Override
             protected Void call() {
                 try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-                    if (connection != null)
-                        updateMessage("connectionEstablished");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+                    if (connection != null) updateMessage("connectionEstablished");
+                } catch (SQLException e) { System.out.println(e.getMessage()); }
                 return null;
             }
         };
@@ -48,7 +43,7 @@ public class PingService extends ScheduledService<Void>
                 currentStatusManager.resetFont();
                 currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
                 thisService.cancel();
-                ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
+                ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, "");
                 WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW, mainStageController,null);
             }
         });

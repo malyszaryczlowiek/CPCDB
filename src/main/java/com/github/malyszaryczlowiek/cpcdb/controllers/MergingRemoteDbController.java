@@ -1,6 +1,5 @@
 package com.github.malyszaryczlowiek.cpcdb.controllers;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.stage.Stage;
@@ -14,38 +13,29 @@ public class MergingRemoteDbController implements Initializable
     private MainStageController mainStageController;
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    public void initialize(URL location, ResourceBundle resources) {}
 
-    }
-
-    public void setStage(Stage stage) {
-        this.stage = stage;
-    }
+    public void setStage(Stage stage) { this.stage = stage; }
 
     public void setMainStageController(MainStageController mainStageController) {
         this.mainStageController = mainStageController;
     }
 
     @FXML
-    protected void onCancelButtonClicked(ActionEvent event) {
-        stage.close();
-        event.consume();
-    }
+    protected void onCancelButtonClicked() { stage.close(); }
 
     @FXML
-    protected void onLoadWithoutMergingClicked(ActionEvent event) {
+    protected void onLoadWithoutMergingClicked() {
         Mergeable listener = mainStageController;
         listener.loadFromRemoteWithoutMerging();
         stage.close();
-        event.consume();
     }
 
     @FXML
-    protected void onMergeButtonClicked(ActionEvent event) {
+    protected void onMergeButtonClicked() {
         Mergeable listener = mainStageController;
         listener.mergeWithRemote();
         stage.close();
-        event.consume();
     }
 
     public interface Mergeable {

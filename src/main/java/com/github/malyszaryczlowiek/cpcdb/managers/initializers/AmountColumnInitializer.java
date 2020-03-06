@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.initializers;
+package com.github.malyszaryczlowiek.cpcdb.managers.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.FloatNumberFormatError;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;

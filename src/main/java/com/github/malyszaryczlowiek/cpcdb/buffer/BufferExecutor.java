@@ -87,7 +87,7 @@ public class BufferExecutor implements Buffer, BufferState
         checkUndoRedoMenuItems();
     }
 
-    public void saveChangesToDatabase(boolean startAsDemon) { // TODO tutaj aktualnie jestem Implementuje taski;
+    public void saveChangesToDatabase(boolean startAsDemon) { // TODO zrobić tutaj testy gdy zapisujemy dane na koniec i mamy nie demony oraz gdy robimy to w trakie i te wątki są demonami.
         Task<Void> savingToRemoteDatabaseTask = SaveChangesToRemoteDatabase.getTask();
         Task<Void> savingToLocalDatabaseTask = SaveChangesToLocalDatabase.getTask();
         Thread savingToRemoteDatabaseThread = new Thread(savingToRemoteDatabaseTask);

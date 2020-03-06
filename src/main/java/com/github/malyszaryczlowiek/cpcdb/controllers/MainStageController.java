@@ -2,13 +2,12 @@ package com.github.malyszaryczlowiek.cpcdb.controllers;
 
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.buffer.BufferExecutor;
-import com.github.malyszaryczlowiek.cpcdb.tasks.LoadingDatabase;
+import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabase;
 import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
 import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
-import com.github.malyszaryczlowiek.cpcdb.tasks.UpdateLocalDb;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
-import com.github.malyszaryczlowiek.cpcdb.initializers.*;
+import com.github.malyszaryczlowiek.cpcdb.managers.initializers.*;
 import com.github.malyszaryczlowiek.cpcdb.managers.ColumnManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.*;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
@@ -46,13 +45,10 @@ public class MainStageController implements Initializable,
         AskToSaveChangesBeforeQuitController.SaveOrCancelListener,
         MergingRemoteDbController.Mergeable
 {
-    private Stage primaryStage;
-
-    // table
+    // main table
     @FXML private TableView<Compound> mainSceneTableView;
 
-    // table's columns
-    //@FXML private TableColumn<Compound, Integer> idCol;
+    // table's columns    //@FXML private TableColumn<Compound, Integer> idCol;
     @FXML private TableColumn<Compound, String> smilesCol;
     @FXML private TableColumn<Compound, String> compoundNumCol;
     @FXML private TableColumn<Compound, String> amountCol; // tu zmieniłem na String mimo, że normalenie powinno być float
@@ -66,8 +62,6 @@ public class MainStageController implements Initializable,
     @FXML private TableColumn<Compound, String> additionalInfoCol;
 
     // FILE ->
-    //@FXML private Menu menuFile;
-
     @FXML private MenuItem menuFileAddCompound;
     @FXML private MenuItem menuFileSearch;
     @FXML private MenuItem menuFileLoadFullTable;
@@ -77,8 +71,9 @@ public class MainStageController implements Initializable,
     @FXML private MenuItem menuFileQuit;
 
     // Edit ->
-    //@FXML private Menu menuEdit;
 
+    @FXML private MenuItem menuEditUndo;
+    @FXML private MenuItem menuEditRedo;
     @FXML private MenuItem menuEditSelectedCompound;
     @FXML private MenuItem menuEditDeleteSelectedCompounds;
 
@@ -89,18 +84,16 @@ public class MainStageController implements Initializable,
     // Help -> About CPCDB
     @FXML private MenuItem menuHelpAboutCPCDB;
 
-    @FXML private MenuItem menuEditUndo;
-    @FXML private MenuItem menuEditRedo;
-
     // Context menu of table
     @FXML private MenuItem editSelectedCompoundContext;
     @FXML private MenuItem deleteSelectedCompoundsContext;
     @FXML private MenuItem showAllColumnsContext;
 
-
+    // progress bar
     @FXML private ProgressBar progressBar;
     @FXML private Text currentStatus;
 
+    private Stage primaryStage;
     private DoubleProperty progressValue;
     private boolean unblockingTask3 = false;
     private BufferExecutor bufferExecutor;
@@ -108,7 +101,6 @@ public class MainStageController implements Initializable,
     private List<Compound> fullListOfCompounds; // to jest lista którą trzeba używać jak chcemy zapisać dane do bazy danych
     private ObservableList<Compound> observableList;
     private LaunchTimer initializationTimer;
-
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
 
@@ -116,7 +108,6 @@ public class MainStageController implements Initializable,
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         initializationTimer = new LaunchTimer();
-
         if (!(new File("propertiesFile").exists())) // checkIfAskForDBProperties()
             WindowFactory.showWindow(WindowsEnum.INITIALIZING_DB_PROPERTIES_WINDOW, null, null);
         else {
@@ -125,7 +116,6 @@ public class MainStageController implements Initializable,
             keyAndPropertiesLoading.stopTimer("key and properties loading time: ");
             CloseProgramNotifier.setToNotCloseProgram();
         }
-
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
             progressValue = new SimpleDoubleProperty(0.0);
             currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus, progressBar);
@@ -141,10 +131,9 @@ public class MainStageController implements Initializable,
                     argonCol, containerCol, storagePlaceCol, lastModificationCol, additionalInfoCol);
             ColumnInitializer.setUpInitializer(mainSceneTableView, bufferExecutor, observableList);
             ErrorFlagsManager.initializeErrorFlagsManager();
-            if ( !SecureProperties.hasProperty("column.width.Smiles") ) setWidthOfColumns();
-
-            Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
-                    observableList, mainSceneTableView, progressBar, currentStatusManager, this);
+            if ( !SecureProperties.hasProperty("column.width.Smiles") ) columnManager.setAllColumnsWidthToProperties();
+            Task<String> loadingDatabaseTask = LoadDatabase.getTask(progressValue,fullListOfCompounds,
+                    observableList, mainSceneTableView, currentStatusManager, this);
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
             loadingDatabaseThread.start();
@@ -175,11 +164,9 @@ public class MainStageController implements Initializable,
             Thread threadTask1 = new Thread(task1);
             Thread threadTask2 = new Thread(task2);
             Thread threadTask3 = new Thread(task3);
-
             threadTask1.setDaemon(true);
             threadTask2.setDaemon(true);
             threadTask3.setDaemon(true);
-
             threadTask1.start();
             threadTask2.start();
             threadTask3.start();
@@ -219,10 +206,7 @@ public class MainStageController implements Initializable,
     }
 
     private void settingUpTask1() {
-        new SmilesColumnInitializer(smilesCol).initialize();
-        new CompoundNumberInitializer(compoundNumCol).initialize();
-        new AmountColumnInitializer(amountCol).initialize();
-        new UnitColumnInitializer(unitCol).initialize();
+        columnManager.initializeColumns(Field.SMILES, Field.COMPOUNDNUMBER, Field.AMOUNT, Field.UNIT);
         MenuItemInitializer.initialize(menuFileAddCompound, menuFileLoadFullTable, menuFileSave,
                 menuFileSearch,menuFilePreferences, menuFileQuit, menuEditSelectedCompound,
                 menuViewFullScreen, menuHelpAboutCPCDB, menuFileLoadDataFromRemoteServer);
@@ -234,10 +218,7 @@ public class MainStageController implements Initializable,
     }
 
     private void settingUpTask2() {
-        new FormColumnInitializer(formCol).initialize();
-        new TemperatureStabilityColumnInitializer(tempStabilityCol).initialize();
-        new ArgonColumnInitializer(argonCol).initialize();
-        new ContainerColumnInitializer(containerCol).initialize();
+        columnManager.initializeColumns(Field.FORM, Field.TEMPSTABILITY, Field.ARGON, Field.CONTAINER);
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
             if (!unblockingTask3) unblockingTask3 = true;
             else lockProvider.getLock(LockTypes.INITIALIZATION_END).notifyAll();
@@ -245,9 +226,7 @@ public class MainStageController implements Initializable,
     }
 
     private void settingUpTask3() {
-        new StoragePlaceColumnInitializer(storagePlaceCol).initialize();
-        new LastModificationColumnInitializer(lastModificationCol).initialize();
-        new AdditionalInfoColumnInitializer(additionalInfoCol).initialize();
+        columnManager.initializeColumns(Field.STORAGEPLACE, Field.DATETIMEMODIFICATION, Field.ADDITIONALINFO);
         try {
             synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
                 lockProvider.getLock(LockTypes.INITIALIZATION_END).wait();
@@ -284,10 +263,7 @@ public class MainStageController implements Initializable,
      */
     @FXML
     protected void onMenuFileSaveClicked() {
-        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);  // robię save
-        // TODO tutaj trzeba uruchomić oddzielny task do zapisania nowych zmian bo każde wywołanie zapytania do bazy danych
-        // powinno być wykonane w oddzielnym wątku tak aby nie blokować głównego.
-        // TODO ale powinno używać locka tak aby wątek główny nie został zamknięty zbyt szybko
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);  // saving changes
     }
 
     @FXML
@@ -297,21 +273,19 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onMenuFileLoadDataFromRemoteServer() {
-        // to jakoś trzeba zimplementować
-        // TODO sprawdź czy sa wprowadzone jakieś zmiany czy bufor nie jest pusty
-        // jeśli jest to wyślij zmiany do remote server i wczytaj ponownie całą bazę.
+        // tutaj jeśli bufor nie jest pusty to wyysłamy dane do zdalnego serwera a następnie loadujemy ponownie
+        // jeśli zaloadujemy to updatujemy lokalny
 
-        /*
-        if (brak błędów połączenia do remote server) {
-            fullListOfCompounds.clear();
-            observableList.clear();
-            Task<String> loadingDatabaseTask = LoadingDatabase.getTask(progressValue,fullListOfCompounds,
-                    observableList, mainSceneTableView, progressBar, currentStatusManager, this);
-            Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
-            loadingDatabaseThread.setDaemon(true);
-            loadingDatabaseThread.start();
-        }
-         */
+        // nie może być deamonem bo najpierw musimy zapisać dane do zdalnego serwera a dopiero następnie wczytać dane z zdalnego
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(false);  // saving changes
+        Task<String> loadingDatabaseTask = LoadDatabase.getTask(progressValue,fullListOfCompounds,
+                observableList, mainSceneTableView, currentStatusManager, this);
+        Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
+        loadingDatabaseThread.setDaemon(true);
+        loadingDatabaseThread.start();
+        jestem tutaj i muszę to zaimplementować;
+        muszę zdefiniować nowy properties tryToLoadToLocalDb żeby sprawdzać czy w ogóle warto się łączyć z lokalną bazą danych.;
+        weryfikacja musi być w LoadDatabase tzn. tam musimy sprawdzić czy jest sens uruchomić ładowanie zdalnej bazy
     }
 
     // FILE -> Quit
@@ -324,11 +298,9 @@ public class MainStageController implements Initializable,
     @FXML
     protected void menuEdit() {
         int count = mainSceneTableView.getSelectionModel().getSelectedItems().size();
-        // Edit -> Edit Selected Compound
-        if (count == 1) menuEditSelectedCompound.setDisable(false);
+        if (count == 1) menuEditSelectedCompound.setDisable(false);         // Edit -> Edit Selected Compound
         else menuEditSelectedCompound.setDisable(true);
-        // Edit -> Delete Selected Compound(s)
-        if (count >= 1) menuEditDeleteSelectedCompounds.setDisable(false);
+        if (count >= 1) menuEditDeleteSelectedCompounds.setDisable(false); // Edit -> Delete Selected Compound(s)
         else menuEditDeleteSelectedCompounds.setDisable(true);
     }
 
@@ -402,7 +374,7 @@ public class MainStageController implements Initializable,
             observableList.setAll( searchEngine.returnListOfFoundCompounds() );
             mainSceneTableView.refresh();
         }
-        else ShortAlertWindowFactory.showErrorWindow(ErrorType.NOT_FOUND_COMPOUND);
+        else ShortAlertWindowFactory.showWindow(ErrorType.NOT_FOUND_COMPOUND);
     }
 
     @FXML
@@ -459,7 +431,7 @@ public class MainStageController implements Initializable,
         {
             @Override
             protected Void call() {
-                setWidthOfColumns();
+                columnManager.setAllColumnsWidthToProperties();
                 SecureProperties.saveProperties();
                 primaryStage.close();
                 return null;
@@ -481,24 +453,10 @@ public class MainStageController implements Initializable,
     @Override
     public void onCloseProgramWithoutChanges() {
         LaunchTimer closeTimer = new LaunchTimer();
-        setWidthOfColumns();
+        columnManager.setAllColumnsWidthToProperties();
         SecureProperties.saveProperties();
         closeTimer.stopTimer("closing time when NOT saving changes only properties");
         Platform.exit();
-    }
-
-    private void setWidthOfColumns() {
-        SecureProperties.setProperty("column.width.Smiles", String.valueOf( smilesCol.getWidth() ));
-        SecureProperties.setProperty("column.width.CompoundName", String.valueOf( compoundNumCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Amount", String.valueOf( amountCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Unit", String.valueOf( unitCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Form", String.valueOf( formCol.getWidth() ));
-        SecureProperties.setProperty("column.width.TemperatureStability", String.valueOf( tempStabilityCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Argon", String.valueOf( argonCol.getWidth() ));
-        SecureProperties.setProperty("column.width.Container", String.valueOf( containerCol.getWidth() ));
-        SecureProperties.setProperty("column.width.StoragePlace", String.valueOf( storagePlaceCol.getWidth() ));
-        SecureProperties.setProperty("column.width.LastModification", String.valueOf( lastModificationCol.getWidth() ));
-        SecureProperties.setProperty("column.width.AdditionalInfo", String.valueOf( additionalInfoCol.getWidth() ));
     }
 
     @FXML
@@ -507,82 +465,26 @@ public class MainStageController implements Initializable,
     }
 
     @FXML
-    private void onCurrentStatusTextClicked() {
-        String text = currentStatus.getText();
-        if ( text.contains("Warning") || text.contains("Error") ) {
-            if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
-
-            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
-
-
-            else if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
-
-
-            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                    && ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
-
-
-            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                    && ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR) )
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
-
-
-            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                    && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) ) {
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
-            }
-        }
-        currentStatusManager.resetFont();
-    }
+    private void onCurrentStatusTextClicked() { currentStatusManager.onCurrentStatusTextClicked(); }
 
     /**
-     * From interface MergingRemoteDbController.Mergeable
+     * Method implemented from interface MergingRemoteDbController.Mergeable
      */
     @Override
     public void mergeWithRemote() {
         Task<Void> mergingTask = MergeRemoteDbWithLocal.getTask(progressValue);
-        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
-                currentStatusManager.setCurrentStatus(newMessage)
-        );
-        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
-                progressBar.setProgress((Double) newValue)
-        );
         Thread mergingThread = new Thread(mergingTask);
         mergingThread.setDaemon(true);
         mergingThread.start();
     }
 
     /**
-     * From interface MergingRemoteDbController.Mergeable
+     * Method implemented from interface MergingRemoteDbController.Mergeable
      */
     @Override
     public void loadFromRemoteWithoutMerging() {
         Task<Void> mergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(
                 progressValue, fullListOfCompounds, observableList, mainSceneTableView);
-        mergingTask.messageProperty().addListener( (observable, oldMessage, newMessage) ->
-                currentStatusManager.setCurrentStatus(newMessage)
-        );
-        mergingTask.progressProperty().addListener((observable, oldValue, newValue) ->
-                progressBar.setProgress((Double) newValue)
-        );
-        mergingTask.titleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.equals("Reloading Remote Server Database Done")){
-                currentStatusManager.setCurrentStatus("Reloading Remote Server Database Done");
-                Task<Void> updatingTask = UpdateLocalDb.getTask(observableList);
-                Thread updatingLocalDbThread = new Thread(updatingTask);
-                updatingLocalDbThread.setDaemon(true);
-                updatingLocalDbThread.start();
-            }
-        });
         Thread mergingThread = new Thread(mergingTask);
         mergingThread.setDaemon(true);
         mergingThread.start();

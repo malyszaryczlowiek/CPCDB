@@ -4,7 +4,7 @@ import javafx.scene.control.Alert;
 
 public class ShortAlertWindowFactory
 {
-    public static void showErrorWindow(ErrorType errorType) {
+    public static void showWindow(ErrorType errorType) {
         switch (errorType) {
             case CANNOT_CONNECT_TO_ALL_DB:
                 new FatalDbConnectionError(Alert.AlertType.ERROR).show();

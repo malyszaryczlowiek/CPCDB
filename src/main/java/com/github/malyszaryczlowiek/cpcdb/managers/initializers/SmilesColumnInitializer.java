@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.initializers;
+package com.github.malyszaryczlowiek.cpcdb.managers.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
@@ -13,9 +13,7 @@ public  class  SmilesColumnInitializer extends ColumnInitializer implements Init
 {
     private TableColumn<Compound, String> smilesCol;
 
-    public SmilesColumnInitializer(TableColumn<Compound, String> smilesCol) {
-        this.smilesCol = smilesCol;
-    }
+    public SmilesColumnInitializer(TableColumn<Compound, String> smilesCol) { this.smilesCol = smilesCol; }
 
     @Override
     public void initialize() {
@@ -31,7 +29,7 @@ public  class  SmilesColumnInitializer extends ColumnInitializer implements Init
                         saveChangeToBufferExecutor(compound, Field.SMILES, newSmiles);
                 });
         smilesCol.setPrefWidth(Double.parseDouble(SecureProperties.getProperty("column.width.Smiles")));
-        boolean isColumnVisible= "true".equals(SecureProperties.getProperty("column.show.Smiles"));
+        boolean isColumnVisible = "true".equals(SecureProperties.getProperty("column.show.Smiles"));
         smilesCol.setVisible(isColumnVisible);
     }
 }

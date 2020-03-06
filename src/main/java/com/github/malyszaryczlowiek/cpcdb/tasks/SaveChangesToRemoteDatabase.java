@@ -15,16 +15,16 @@ import java.sql.SQLException;
 
 public class SaveChangesToRemoteDatabase extends Task<Void>
 {
-    private SaveChangesToRemoteDatabase() {}
-
-    private void setUpTaskListeners() {
-        messageProperty().addListener( (observable, oldValue, newValue) -> manageNewCommunicates(newValue) );
-    }
-
     public static Task<Void> getTask() {
         SaveChangesToRemoteDatabase task = new SaveChangesToRemoteDatabase();
         task.setUpTaskListeners();
         return task;
+    }
+
+    private SaveChangesToRemoteDatabase() {}
+
+    private void setUpTaskListeners() {
+        messageProperty().addListener( (observable, oldValue, newValue) -> manageNewCommunicates(newValue) );
     }
 
     @Override
@@ -36,20 +36,14 @@ public class SaveChangesToRemoteDatabase extends Task<Void>
                 updateMessage("incorrectRemotePassphrase");
             else if (connection != null)  saveChangesToLocalDatabase(connection);
             else updateMessage("otherErrorOccurred");
-
-            // TODO if (jeśli wątek jest demonem notyfikuj inne wątki o skończeniu działania?)
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
     private void saveChangesToLocalDatabase (Connection connection) {
         BufferExecutor bufferExecutor = BufferExecutor.getBufferExecutor();
         updateMessage("startingSavingData");
-
-
-
+        // TODO zaimplemnetować SEJWOWANIE!!!
         updateMessage("dataSavedToRemoteDatabase");
     }
 
@@ -57,11 +51,11 @@ public class SaveChangesToRemoteDatabase extends Task<Void>
         CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
         switch (newCommunicate) {
             case "cannotConnectToRemoteDB":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
                 currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
                 break;
             case "incorrectRemotePassphrase":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_REMOTE_DB_AUTHORISATION);
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_DB_AUTHORISATION);
                 currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
                 break;
             case "startingSavingData":
@@ -71,7 +65,7 @@ public class SaveChangesToRemoteDatabase extends Task<Void>
                 currentStatusManager.setInfoStatus("Data saved to Local Database", 0.0);
                 break;
             case "otherErrorOccurred":
-                ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
                 currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
                 break;
             default:

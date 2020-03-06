@@ -1,5 +1,9 @@
 package com.github.malyszaryczlowiek.cpcdb.managers;
 
+import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlags;
+import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlagsManager;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
@@ -14,7 +18,6 @@ public class CurrentStatusManager
 {
     private static Text currentStatus;
     private static ProgressBar progressBar;
-    //private CurrentStatusManager thisCurrentStatusManager;
 
     public static CurrentStatusManager getThisCurrentStatusManager() throws NullPointerException {
         if (currentStatus == null) throw new NullPointerException(
@@ -62,6 +65,31 @@ public class CurrentStatusManager
         resetFont();
         currentStatus.setText(info);
         progressBar.setProgress(progressBarValue);
+    }
+
+    public synchronized void setProgressValue(double newValue) { progressBar.setProgress( newValue); }
+
+    public synchronized void onCurrentStatusTextClicked() {
+        String text = currentStatus.getText();
+        if ( text.contains("Warning") || text.contains("Error") ) {
+            boolean connectionToRemoteDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            boolean connectionToLocalDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR);
+            boolean incorrectRemotePassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
+            boolean incorrectLocalPassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR);
+            if (connectionToRemoteDb && connectionToLocalDb )
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
+            else if ( connectionToRemoteDb && incorrectLocalPassphrase )
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
+            else if ( !incorrectLocalPassphrase && !connectionToLocalDb && connectionToRemoteDb )
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
+            else if ( incorrectRemotePassphrase && connectionToLocalDb )
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
+            else if ( incorrectRemotePassphrase && incorrectLocalPassphrase )
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
+            else if ( !incorrectLocalPassphrase && !connectionToLocalDb && incorrectRemotePassphrase )
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
+        }
+        resetFont();
     }
 }
 

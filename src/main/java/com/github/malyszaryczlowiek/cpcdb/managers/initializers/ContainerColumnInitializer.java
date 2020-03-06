@@ -1,4 +1,4 @@
-package com.github.malyszaryczlowiek.cpcdb.initializers;
+package com.github.malyszaryczlowiek.cpcdb.managers.initializers;
 
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
@@ -8,8 +8,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-
-import java.io.IOException;
 
 public class ContainerColumnInitializer extends ColumnInitializer implements Initializable
 {

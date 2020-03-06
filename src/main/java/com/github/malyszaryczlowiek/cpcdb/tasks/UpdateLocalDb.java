@@ -24,28 +24,32 @@ public class UpdateLocalDb extends Task<Void>
         return updateLocalDb;
     }
 
+    /**
+     * This method is called only from the main JavaFX Application Thread.
+     * All bodies of listeners are called from JavaFx Application Thread as well.
+     */
     private void setUpTaskListeners() {
         this.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
             CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
             switch (newValue2) {
                 case "connectionError":
-                    ShortAlertWindowFactory.showErrorWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
+                    ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
                     currentStatusManager.setErrorMessage("Error, Cannot Connect to Local Database");
                     break;
                 case "incorrectPassphrase":
-                    ShortAlertWindowFactory.showErrorWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
+                    ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
                     currentStatusManager.setCurrentStatus("Error, Incorrect Local Database Authorisation");
                     break;
                 case "updatingLocalDatabase":
                     currentStatusManager.resetFont();
-                    currentStatusManager.setCurrentStatus("Updating Local Database");
+                    currentStatusManager.setCurrentStatus("Updating Local Database...");
                     break;
                 case "localDbUpdated":
                     currentStatusManager.resetFont();
-                    currentStatusManager.setCurrentStatus("Local Database Updated");
+                    currentStatusManager.setCurrentStatus("Remote Database Downloaded & Local Updated");
                     break;
                 case "UnknownError":
-                    ShortAlertWindowFactory.showErrorWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                    ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
                     currentStatusManager.setCurrentStatus("Unknown Error");
                     break;
                 default:
@@ -54,31 +58,23 @@ public class UpdateLocalDb extends Task<Void>
         });
     }
 
-    private UpdateLocalDb(ObservableList<Compound> observableList) {
-        this.observableList = observableList;
-    }
+    private UpdateLocalDb(ObservableList<Compound> observableList) { this.observableList = observableList; }
 
     @Override
     protected Void call() {
         try ( Connection connection = ConnectionManager.connectToLocalDb() ) {
-            if ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                    && connection == null )
+            boolean connectionToLocalDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR);
+            boolean incorrectLocalPassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR);
+            if ( connectionToLocalDb && connection == null )
                 updateMessage("connectionError");
-            else if ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                    && connection == null )
+            else if ( incorrectLocalPassphrase && connection == null )
                 updateMessage("incorrectPassphrase");
-            else if ( !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                    && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR)
-                    && connection != null ) {
+            else if ( !incorrectLocalPassphrase && !connectionToLocalDb && connection != null ) {
                 updateMessage("updatingLocalDatabase");
-                updateLocalDatabase(connection);
-            }
-            else
-                updateMessage("UnknownError.");
+                updateLocalDatabase(connection); }
+            else updateMessage("UnknownError.");
         }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
+        catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
@@ -86,9 +82,8 @@ public class UpdateLocalDb extends Task<Void>
         final String clearTableQuery = "DELETE FROM compounds";
         try {
             connection.setAutoCommit(false);
-            PreparedStatement loadDBStatement = connection.prepareStatement(clearTableQuery);
-            loadDBStatement.executeUpdate();
-
+            PreparedStatement clearTableStatement = connection.prepareStatement(clearTableQuery);
+            clearTableStatement.executeUpdate();
             for (Compound compound: observableList) {
                 Integer compoundId = compound.getId();
                 String smiles = compound.getSmiles();
@@ -107,26 +102,20 @@ public class UpdateLocalDb extends Task<Void>
                         "Form, Stability, Argon, Container, " +
                         "StoragePlace, LastModification, AdditionalInfo) " +
                         "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
-
                 PreparedStatement addingStatement = connection.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS);
-
                 addingStatement.setInt(1, compoundId);
                 addingStatement.setString(2, smiles);
                 addingStatement.setString(3, compoundNumber);
                 addingStatement.setFloat(4, amount);
-
                 addingStatement.setString(5, unit);
                 addingStatement.setString(6, form);
                 addingStatement.setString(7, stability);
                 addingStatement.setBoolean(8, argon);
-
                 addingStatement.setString(9, container);
                 addingStatement.setString(10, storagePlace);
                 addingStatement.setTimestamp(11, Timestamp.valueOf(modificationDate));
                 addingStatement.setString(12, additionalInformation);
-
                 addingStatement.executeUpdate();
-
                 // można jeszcze spróbować rozwiązania z
                 // https://www.mysqltutorial.org/mysql-jdbc-transaction/
                 // gdzie ustawia się na początku po stroworzeniu connection setAutoCommit(false)
@@ -134,10 +123,7 @@ public class UpdateLocalDb extends Task<Void>
                 // na końcu.
             }
             connection.commit();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         updateMessage("localDbUpdated");
-        System.out.println("Local Db updated");
     }
 }

@@ -9,6 +9,7 @@ import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
 import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 
+import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
 import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -31,7 +32,10 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
 
     public static Task<Void> getTask(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
                                      ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView) {
-        return new LoadDatabaseFromRemoteWithoutMerging(progressValue, fullListOfCompounds, observableList, mainSceneTableView);
+        LoadDatabaseFromRemoteWithoutMerging task = new LoadDatabaseFromRemoteWithoutMerging(
+                        progressValue, fullListOfCompounds, observableList, mainSceneTableView);
+        task.setUpTaskListeners();
+        return task;
     }
 
     private LoadDatabaseFromRemoteWithoutMerging(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
@@ -43,46 +47,49 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
         this.mainSceneTableView = mainSceneTableView;
     }
 
+    private void setUpTaskListeners() {
+        this.messageProperty().addListener( (observable, oldMessage, newMessage) -> {
+                    CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+                    currentStatusManager.setCurrentStatus(newMessage);
+        });
+        this.progressProperty().addListener((observable, oldValue, newValue) -> {
+                    CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+                    currentStatusManager.setProgressValue( (Double) newValue );
+        });
+        this.titleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.equals("Reloading Remote Server Database Done")){
+                CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+                currentStatusManager.setCurrentStatus("Reloading Remote Server Database Done");
+                zrobić sprawdzenie z tryToLoadToLocalDb // if (SecureProperties.getProperty("tryToLoadToLocalDb").equals("true))
+                Task<Void> updatingTask = UpdateLocalDb.getTask(observableList); // here we updating our local server
+                Thread updatingLocalDbThread = new Thread(updatingTask);
+                updatingLocalDbThread.setDaemon(true);
+                updatingLocalDbThread.start();
+            }
+        });
+    }
+
     @Override
     protected Void call() {
         try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-            if ( ! ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                    && connection != null) {
-                loadTable(connection);
-            }
-            else
-                updateMessage("Reconnection to Remote Server failed.");
+            boolean connectedToRemoteDb =ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            if ( !connectedToRemoteDb && connection != null) loadTable(connection);
+            else updateMessage("Reconnection to Remote Server failed.");
         }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
+        catch (SQLException e) { e.printStackTrace(); }
         return null;
-    }
-
-    private void stopThisThread(int milliseconds) {
-        try {
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                lockProvider.getLock(LockTypes.PROGRESS_VALUE).wait(milliseconds);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void loadTable(Connection connection)  {
         updateMessage("Connecting to Database");
         updateProgress(0.0,1.0);
-        stopThisThread(1);
         final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
         int size = 0;
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
             ResultSet resultSet = loadDBStatement.executeQuery();
-            while (resultSet.next())
-                size = resultSet.getInt(1); // getting number of rows
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            while (resultSet.next()) size = resultSet.getInt(1); // getting number of rows
+        } catch (SQLException e) { e.printStackTrace(); }
         final String loadDBSQLQuery = "SELECT * FROM compounds";
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
@@ -91,11 +98,9 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
             }
             updateMessage("Downloading data from Remote Server");
             updateProgress(0.05, 1.0);
-            stopThisThread(1);
             ResultSet resultSet = loadDBStatement.executeQuery();
             updateMessage("Loading downloaded data");
             updateProgress(0.1, 1.0);
-            stopThisThread(1);
             int index = 0;
             fullListOfCompounds.clear();
             observableList.clear();
@@ -123,20 +128,15 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
                     double loadedPercentage = Math.round( (double) index / ((double) size) * 100);
                     updateMessage("Loaded " + loadedPercentage + "%");
                     updateProgress(0.1 + loadedPercentage * 0.9, 1.0);
-                    stopThisThread(1);
                 }
             }
             updateMessage("Refreshing Table");
-            stopThisThread(1);
             observableList.setAll(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
         }
-        catch (SQLException e) {
-            e.printStackTrace();
-        }
+        catch (SQLException e) { e.printStackTrace(); }
         updateProgress(0.0,1.0);
         updateTitle("Reloading Remote Server Database Done");
-        stopThisThread(2);
     }
 }
 

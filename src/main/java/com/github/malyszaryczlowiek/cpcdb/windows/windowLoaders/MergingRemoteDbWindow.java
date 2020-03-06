@@ -31,7 +31,5 @@ class MergingRemoteDbWindow implements ShowAble
     }
 
     @Override
-    public void show() {
-        mergeWindow.show();
-    }
+    public void show() { mergeWindow.show(); }
 }

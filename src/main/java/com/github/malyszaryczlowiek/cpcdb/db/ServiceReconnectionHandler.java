@@ -23,18 +23,20 @@ class ServiceReconnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.remote.user"),
                     SecureProperties.getProperty("settings.db.remote.passphrase"));
             DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.REMOTE);
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, false);
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, false);
+            ErrorFlagsManager.resetErrorFlag(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            ErrorFlagsManager.resetErrorFlag(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
             return CONNECTION;
         }
-        catch ( CommunicationsException e) { //CJCommunicationsException |
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, true);
-            e.printStackTrace();
+        catch ( CommunicationsException | java.sql.SQLNonTransientConnectionException e) { //CJCommunicationsException |
+            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, e.getMessage());
+            System.out.println(e.getMessage());
+             // TODO tu jak będę implementował loga to nie trzeba robić aby mi wywalał error o braku połączenia co 3s
             return null;
         }
         catch (SQLException e) {
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, true);
-            e.printStackTrace();
+            ErrorFlagsManager.setErrorFlagTo(
+                    ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, e.getMessage());
+            System.out.println(e.getMessage());
             return null;
         }
     }
