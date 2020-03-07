@@ -8,19 +8,19 @@ import com.github.malyszaryczlowiek.cpcdb.compound.TempStability;
 import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
 import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
-import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
-import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
+import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
 
-import javafx.beans.property.DoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,19 +30,15 @@ import java.util.List;
 
 public class LoadDatabase extends Task<String>
 {
-    private LockProvider lockProvider;
-    private DoubleProperty progressValue;
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private TableView<Compound> mainSceneTableView;
     private CurrentStatusManager currentStatusManager;
     private MainStageController mainStageController;
 
-    private LoadDatabase(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                         ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                         CurrentStatusManager currentStatusManager, MainStageController mainStageController) {
-        lockProvider = LockProvider.getLockProvider();
-        this.progressValue = progressValue;
+    private LoadDatabase( List<Compound> fullListOfCompounds, ObservableList<Compound> observableList,
+                          TableView<Compound> mainSceneTableView, CurrentStatusManager currentStatusManager,
+                          MainStageController mainStageController) {
         this.fullListOfCompounds = fullListOfCompounds;
         this.observableList = observableList;
         this.mainSceneTableView = mainSceneTableView;
@@ -50,10 +46,10 @@ public class LoadDatabase extends Task<String>
         this.mainStageController = mainStageController;
     }
 
-    public static Task<String> getTask(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                                       ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                                       CurrentStatusManager currentStatusManager, MainStageController mainStageController) {
-        LoadDatabase thisTask = new LoadDatabase(progressValue, fullListOfCompounds, observableList,
+    public static Task<String> getTask( List<Compound> fullListOfCompounds, ObservableList<Compound> observableList,
+                                        TableView<Compound> mainSceneTableView, CurrentStatusManager currentStatusManager,
+                                        MainStageController mainStageController) {
+        LoadDatabase thisTask = new LoadDatabase( fullListOfCompounds, observableList,
                 mainSceneTableView, currentStatusManager, mainStageController);
         thisTask.setUpTaskListeners();
         return thisTask;
@@ -64,10 +60,13 @@ public class LoadDatabase extends Task<String>
      * All bodies of listeners are called from JavaFx Application Thread as well.
      */
     private void setUpTaskListeners() {
-        this.messageProperty().addListener( (observableValue, oldString, newString) -> manageNewCommunicates(newString) );
-        this.valueProperty().addListener( (observable, oldValue, newValue) -> manageNewCommunicates(newValue) );
-        this.titleProperty().addListener( (observable, oldValue, newValue) -> {
-            if ("updateLocalDb".equals(newValue)) {
+        messageProperty().addListener( (observableValue, oldString, newString) -> manageNewCommunicates(newString) );
+        valueProperty().addListener( (observable, oldValue, newValue) -> manageNewCommunicates(newValue) );
+        titleProperty().addListener( (observable, oldValue, newValue) -> {
+            CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+            currentStatusManager.setProgressValue(0.0);
+            currentStatusManager.setInfoStatus("Data loaded, table refreshed");
+            if (SecureProperties.getProperty("tryToConnectToLocalDb").equals("true") && "updateLocalDb".equals(newValue)) {
                 Task<Void> updateLocalDbTask = UpdateLocalDb.getTask(observableList);
                 Thread updateLocalDbThread = new Thread(updateLocalDbTask);
                 updateLocalDbThread.setDaemon(true);
@@ -89,40 +88,40 @@ public class LoadDatabase extends Task<String>
             else if ( connectionToRemoteDb && incorrectLocalPassphrase )
                 updateValue("cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase"); // not working on any copy
             else if ( !incorrectLocalPassphrase && !connectionToLocalDb && connectionToRemoteDb && connection != null ) {
-                updateValue("cannotConnectToRemoteDB");
-                loadTable(connection); }// working on local copy
+                loadTable(connection);
+                updateValue("cannotConnectToRemoteDB");}// working on local copy
             else if ( incorrectRemotePassphrase && connectionToLocalDb )
                 updateValue("incorrectRemotePassphraseAndCannotConnectToLocalDatabase");// not working on any copy
             else if ( incorrectRemotePassphrase && incorrectLocalPassphrase )
                 updateValue("incorrectRemoteAndLocalPassphrase");// not working on any copy
             else if ( !incorrectLocalPassphrase && !connectionToLocalDb && incorrectRemotePassphrase && connection != null) {
-                updateValue("incorrectRemotePassphrase");
-                loadTable(connection); }// working on local copy
-            else if (connection != null && noErrors) loadTable(connection); // all working ok
-            else updateMessage("UnknownErrorOccurred");
+                loadTable(connection);
+                updateValue("incorrectRemotePassphrase"); }// working on local copy
+            else if (connection != null && noErrors) {
+                updateValue("Connecting to Database...");
+                loadTable(connection); }// all working ok
+            else updateValue("UnknownErrorOccurred");
         }
         catch (SQLException e) { e.printStackTrace(); }
         return "taskEnded";
     }
 
     private void loadTable(Connection connection)  {
-        updateMessage("Connecting to Database...");
+        CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+        currentStatusManager.setProgressValue(0.05);
         final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
         int size = 0;
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(numberOfRowsQuery);
             ResultSet resultSet = loadDBStatement.executeQuery();
-            while (resultSet.next())
-                size = resultSet.getInt(1); // getting number of rows
+            while (resultSet.next()) size = resultSet.getInt(1); // getting number of rows
         } catch (SQLException e) { e.printStackTrace(); }
         final String loadDBSQLQuery = "SELECT * FROM compounds";
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                progressValue.setValue( progressValue.get() + 0.1);
-            }
             updateMessage("Downloading data from Server");
             ResultSet resultSet = loadDBStatement.executeQuery();
+            currentStatusManager.setProgressValue(0.1);
             updateMessage("Loading downloaded data");
             int index = 0;
             fullListOfCompounds.clear();
@@ -146,30 +145,19 @@ public class LoadDatabase extends Task<String>
                 compound.setId(id);
                 compound.setSavedInDatabase(true);
                 fullListOfCompounds.add(compound);
-                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
-                synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                    progressValue.setValue( progressValue.get() + 0.6 * ( 1.0 / ((double) size)));
+                currentStatusManager.addToProgressValue(0.9 * ( 1.0 / ((double) size)));
+                if (index % 100 == 0) {
+                    double loadedPercentage = BigDecimal.valueOf( (double) ++index / ((double) size) * 100 )
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue();
+                    updateMessage("Loaded " + loadedPercentage + "%");
                 }
-                if (index % 100 == 0) updateMessage("Loaded " + loadedPercentage + "%");
             }
             updateMessage("Refreshing table");
             observableList.setAll(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
         }
         catch (SQLException e) { e.printStackTrace(); }
-        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) { progressValue.setValue(0.0); }
-        boolean showWarning = ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
-                ||
-                ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
-                        && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
-                        && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
-        if ( showWarning ) updateMessage("showWarning");
-        else {
-            updateMessage("Data loaded, table refreshed");
-            updateTitle("updateLocalDb");
-        }
+        updateTitle("updateLocalDb");
     }
 
     /**
@@ -180,42 +168,38 @@ public class LoadDatabase extends Task<String>
             case "cannotConnectToAllDB":
                 ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_ALL_DB);
                 startService();
-                currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
+                currentStatusManager.setErrorStatus("Error (click here for more info)");
                 break;
             case "cannotConnectToRemoteDatabaseAndIncorrectLocalUsernameOrPassphrase":
                 ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_BD_AND_INCORRECT_LOCAL_PASSPHRASE);
                 startService();
-                currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
+                currentStatusManager.setErrorStatus("Error (click here for more info)");
                 break;
             case "cannotConnectToRemoteDB":
                 ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
                 startService();
-                currentStatusManager.setWarningMessage("Warning (click here for more info)");
+                currentStatusManager.setWarningStatus("Warning (click here for more info)");
                 break;
             case "incorrectRemotePassphraseAndCannotConnectToLocalDatabase":
                 ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE_AND_CANNOT_CONNECT_TO_LOCAL_DB);
-                currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
+                currentStatusManager.setErrorStatus("Error (click here for more info)");
                 break;
             case "incorrectRemoteAndLocalPassphrase":
                 ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_AND_LOCAL_PASSPHRASE);
-                currentStatusManager.setErrorStatus("Error (click here for more info)", 0.0);
+                currentStatusManager.setErrorStatus("Error (click here for more info)");
                 break;
             case "incorrectRemotePassphrase":
                 ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
-                currentStatusManager.setWarningMessage("Warning (click here for more info)");
-                break;
-            case "showWarning":
-                currentStatusManager.setWarningMessage("Warning(click here for more info)");
-                currentStatusManager.setProgressValue(0.0);
+                currentStatusManager.setWarningStatus("Warning (click here for more info)");
                 break;
             case "UnknownErrorOccurred":
                 ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
-                currentStatusManager.setErrorStatus("Unknown Error Occurred", 0.0);
+                currentStatusManager.setErrorStatus("Unknown Error Occurred");
                 break;
-            case "taskEnded":// do nothing
+            case "taskEnded":// do nothing, all done
                 break;
             default:  // correct data loading
-                currentStatusManager.setInfoStatus(newString, progressValue.doubleValue());
+                currentStatusManager.setInfoStatus(newString);
                 break;
         }
     }
@@ -230,7 +214,20 @@ public class LoadDatabase extends Task<String>
     }
 }
 
-
+/*
+       boolean showWarning = ( ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) )
+                ||
+                ( ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR)
+                        && !ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR)
+                        && !ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR) );
+        if ( showWarning ) updateMessage("showWarning");
+        else {
+            updateMessage("Data loaded, table refreshed");
+            updateTitle("updateLocalDb");
+        }
+ */
 
 
 

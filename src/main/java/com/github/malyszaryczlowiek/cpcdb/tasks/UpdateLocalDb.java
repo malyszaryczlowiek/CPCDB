@@ -24,41 +24,43 @@ public class UpdateLocalDb extends Task<Void>
         return updateLocalDb;
     }
 
+    private UpdateLocalDb(ObservableList<Compound> observableList) { this.observableList = observableList; }
+
     /**
      * This method is called only from the main JavaFX Application Thread.
      * All bodies of listeners are called from JavaFx Application Thread as well.
      */
     private void setUpTaskListeners() {
-        this.messageProperty().addListener((observable2, oldValue2, newValue2) -> {
-            CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
-            switch (newValue2) {
-                case "connectionError":
-                    ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
-                    currentStatusManager.setErrorMessage("Error, Cannot Connect to Local Database");
-                    break;
-                case "incorrectPassphrase":
-                    ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
-                    currentStatusManager.setCurrentStatus("Error, Incorrect Local Database Authorisation");
-                    break;
-                case "updatingLocalDatabase":
-                    currentStatusManager.resetFont();
-                    currentStatusManager.setCurrentStatus("Updating Local Database...");
-                    break;
-                case "localDbUpdated":
-                    currentStatusManager.resetFont();
-                    currentStatusManager.setCurrentStatus("Remote Database Downloaded & Local Updated");
-                    break;
-                case "UnknownError":
-                    ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
-                    currentStatusManager.setCurrentStatus("Unknown Error");
-                    break;
-                default:
-                    break;
-            }
-        });
+        titleProperty().addListener((observable, oldValue, newValue) -> manageNewMessages(newValue) );
+        messageProperty().addListener((observable2, oldValue2, newValue2) -> manageNewMessages(newValue2));
     }
 
-    private UpdateLocalDb(ObservableList<Compound> observableList) { this.observableList = observableList; }
+    private void manageNewMessages(String message) {
+        CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+        switch (message) {
+            case "connectionError":
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_LOCAL_DB);
+                currentStatusManager.setErrorStatus("Error, Cannot Connect to Local Database");
+                break;
+            case "incorrectPassphrase":
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_LOCAL_DB_AUTHORISATION);
+                currentStatusManager.setErrorStatus("Error, Incorrect Local Database Authorisation");
+                break;
+            case "updatingLocalDatabase":
+                currentStatusManager.setInfoStatus("Updating Local Database...");
+                break;
+            case "localDbUpdated":
+                currentStatusManager.setProgressValue(0.0);
+                currentStatusManager.setInfoStatus("Remote Database Downloaded & Local Updated");
+                break;
+            case "UnknownError":
+                ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                currentStatusManager.setErrorStatus("Unknown Error");
+                break;
+            default:
+                break;
+        }
+    }
 
     @Override
     protected Void call() {
@@ -84,6 +86,9 @@ public class UpdateLocalDb extends Task<Void>
             connection.setAutoCommit(false);
             PreparedStatement clearTableStatement = connection.prepareStatement(clearTableQuery);
             clearTableStatement.executeUpdate();
+            int index = 0;
+            final int size = observableList.size();
+            CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
             for (Compound compound: observableList) {
                 Integer compoundId = compound.getId();
                 String smiles = compound.getSmiles();
@@ -116,6 +121,11 @@ public class UpdateLocalDb extends Task<Void>
                 addingStatement.setTimestamp(11, Timestamp.valueOf(modificationDate));
                 addingStatement.setString(12, additionalInformation);
                 addingStatement.executeUpdate();
+
+                double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
+                currentStatusManager.addToProgressValue( loadedPercentage ); // 0.9 * ( 1.0 / ((double) size))
+                if (index % 100 == 0) // TODO dla dużych zbiorów można to uruchomić
+                    updateMessage("Loaded " + loadedPercentage + "%");
                 // można jeszcze spróbować rozwiązania z
                 // https://www.mysqltutorial.org/mysql-jdbc-transaction/
                 // gdzie ustawia się na początku po stroworzeniu connection setAutoCommit(false)
@@ -124,6 +134,6 @@ public class UpdateLocalDb extends Task<Void>
             }
             connection.commit();
         } catch (SQLException e) { e.printStackTrace(); }
-        updateMessage("localDbUpdated");
+        updateTitle("localDbUpdated");
     }
 }

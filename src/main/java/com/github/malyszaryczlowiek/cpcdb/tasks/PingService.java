@@ -40,10 +40,9 @@ public class PingService extends ScheduledService<Void>
         task.messageProperty().addListener( (observable, oldValue, newValue) -> {
             if (newValue.equals("connectionEstablished")) {
                 CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
-                currentStatusManager.resetFont();
-                currentStatusManager.setCurrentStatus("Connection to Remote Database Established");
+                currentStatusManager.setInfoStatus("Connection to Remote Database Established");
                 thisService.cancel();
-                ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, "");
+                ErrorFlagsManager.resetErrorFlag(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
                 WindowFactory.showWindow(WindowsEnum.MERGING_REMOTE_DB_WINDOW, mainStageController,null);
             }
         });

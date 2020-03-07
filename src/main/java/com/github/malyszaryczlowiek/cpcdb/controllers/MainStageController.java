@@ -20,8 +20,6 @@ import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
 import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.*;
 
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -67,7 +65,7 @@ public class MainStageController implements Initializable,
     @FXML private MenuItem menuFileLoadFullTable;
     @FXML private MenuItem menuFileLoadDataFromRemoteServer;
     @FXML private MenuItem menuFileSave;
-    @FXML private MenuItem menuFilePreferences;
+    @FXML private MenuItem menuFileSettings;
     @FXML private MenuItem menuFileQuit;
 
     // Edit ->
@@ -94,7 +92,6 @@ public class MainStageController implements Initializable,
     @FXML private Text currentStatus;
 
     private Stage primaryStage;
-    private DoubleProperty progressValue;
     private boolean unblockingTask3 = false;
     private BufferExecutor bufferExecutor;
     private ColumnManager columnManager;
@@ -117,9 +114,8 @@ public class MainStageController implements Initializable,
             CloseProgramNotifier.setToNotCloseProgram();
         }
         if ( ! CloseProgramNotifier.getIfCloseUninitializedProgram() ) {
-            progressValue = new SimpleDoubleProperty(0.0);
             currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager(currentStatus, progressBar);
-            currentStatusManager.setCurrentStatus("Initializing program");
+            currentStatusManager.setInfoStatus("Initializing program");
             lockProvider = LockProvider.getLockProvider();
             fullListOfCompounds = new ArrayList<>();
             observableList = FXCollections.observableArrayList(fullListOfCompounds); // todo TE DWIE LINIJKI MOŻNA chyba przenieść do loadingdatabaseTask  12 linijek niżej
@@ -132,7 +128,7 @@ public class MainStageController implements Initializable,
             ColumnInitializer.setUpInitializer(mainSceneTableView, bufferExecutor, observableList);
             ErrorFlagsManager.initializeErrorFlagsManager();
             if ( !SecureProperties.hasProperty("column.width.Smiles") ) columnManager.setAllColumnsWidthToProperties();
-            Task<String> loadingDatabaseTask = LoadDatabase.getTask(progressValue,fullListOfCompounds,
+            Task<String> loadingDatabaseTask = LoadDatabase.getTask(fullListOfCompounds,
                     observableList, mainSceneTableView, currentStatusManager, this);
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
@@ -199,16 +195,14 @@ public class MainStageController implements Initializable,
                 else deleteSelectedCompoundsContext.setDisable(true);
             });
         }
-        synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-            progressValue.setValue( progressValue.get() + 0.3);
-        }
+        currentStatusManager.addToProgressValue(0.3);
         initializationTimer.stopTimer("initializing process completed");
     }
 
     private void settingUpTask1() {
         columnManager.initializeColumns(Field.SMILES, Field.COMPOUNDNUMBER, Field.AMOUNT, Field.UNIT);
         MenuItemInitializer.initialize(menuFileAddCompound, menuFileLoadFullTable, menuFileSave,
-                menuFileSearch,menuFilePreferences, menuFileQuit, menuEditSelectedCompound,
+                menuFileSearch, menuFileSettings, menuFileQuit, menuEditSelectedCompound,
                 menuViewFullScreen, menuHelpAboutCPCDB, menuFileLoadDataFromRemoteServer);
         menuViewFullScreen.setSelected(false);
         synchronized (lockProvider.getLock(LockTypes.INITIALIZATION_END)) {
@@ -262,30 +256,24 @@ public class MainStageController implements Initializable,
      * metoda uruchamiana po kliknięciu save w menu programu
      */
     @FXML
-    protected void onMenuFileSaveClicked() {
-        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);  // saving changes
+    protected void onMenuFileSaveClicked() { // saving changes
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);
     }
 
     @FXML
-    protected void onMenuFilePreferencesClicked() {
+    protected void onMenuFileSettingsClicked() {
         WindowFactory.showWindow(WindowsEnum.SETTINGS_WINDOW,null, null);
     }
 
     @FXML
     protected void onMenuFileLoadDataFromRemoteServer() {
-        // tutaj jeśli bufor nie jest pusty to wyysłamy dane do zdalnego serwera a następnie loadujemy ponownie
-        // jeśli zaloadujemy to updatujemy lokalny
-
         // nie może być deamonem bo najpierw musimy zapisać dane do zdalnego serwera a dopiero następnie wczytać dane z zdalnego
         if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(false);  // saving changes
-        Task<String> loadingDatabaseTask = LoadDatabase.getTask(progressValue,fullListOfCompounds,
-                observableList, mainSceneTableView, currentStatusManager, this);
+        Task<String> loadingDatabaseTask = LoadDatabase.getTask(fullListOfCompounds, observableList,
+                mainSceneTableView, currentStatusManager, this);
         Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
         loadingDatabaseThread.setDaemon(true);
         loadingDatabaseThread.start();
-        jestem tutaj i muszę to zaimplementować;
-        muszę zdefiniować nowy properties tryToLoadToLocalDb żeby sprawdzać czy w ogóle warto się łączyć z lokalną bazą danych.;
-        weryfikacja musi być w LoadDatabase tzn. tam musimy sprawdzić czy jest sens uruchomić ładowanie zdalnej bazy
     }
 
     // FILE -> Quit
@@ -360,16 +348,15 @@ public class MainStageController implements Initializable,
      * a następnie umieszczenie znalezionych związków w tabeli
      */
     @Override
-    public void searchingCriteriaChosen(String smiles, String smilesAccuracy,
-                                        String compoundNumber, String compoundNumberAccuracy,
-                                        String form, String container, String storagePlace,
-                                        String beforeAfter, LocalDate selectedLocalDate,
+    public void searchingCriteriaChosen(String smiles, String smilesAccuracy, String compoundNumber,
+                                        String compoundNumberAccuracy, String form, String container,
+                                        String storagePlace, String beforeAfter, LocalDate selectedLocalDate,
                                         String argon, String temperature, String additionalInfo)
     {
-        SearchEngine searchEngine = new SearchEngine(fullListOfCompounds, smiles, smilesAccuracy,
+        SearchEngine searchEngine = new SearchEngine(fullListOfCompounds, smiles, smilesAccuracy, // todo to można byłoby zrobić w innym watku !!!
                 compoundNumber, compoundNumberAccuracy, form, container, storagePlace, beforeAfter,
                 selectedLocalDate, argon, temperature, additionalInfo);
-        if (!searchEngine.returnListOfFoundCompounds().isEmpty()) {// display found compounds
+        if (!searchEngine.returnListOfFoundCompounds().isEmpty()) { // display found compounds
             observableList.clear();
             observableList.setAll( searchEngine.returnListOfFoundCompounds() );
             mainSceneTableView.refresh();
@@ -422,7 +409,7 @@ public class MainStageController implements Initializable,
             protected Void call()
             {
                 LaunchTimer saveTimer = new LaunchTimer();
-                bufferExecutor.saveChangesToDatabase(false); // robię save
+                bufferExecutor.saveChangesToDatabase(false); // make save
                 saveTimer.stopTimer("Save Timer is stopped");
                 return null;
             }
@@ -472,7 +459,7 @@ public class MainStageController implements Initializable,
      */
     @Override
     public void mergeWithRemote() {
-        Task<Void> mergingTask = MergeRemoteDbWithLocal.getTask(progressValue);
+        Task<Void> mergingTask = MergeRemoteDbWithLocal.getTask();
         Thread mergingThread = new Thread(mergingTask);
         mergingThread.setDaemon(true);
         mergingThread.start();
@@ -483,11 +470,11 @@ public class MainStageController implements Initializable,
      */
     @Override
     public void loadFromRemoteWithoutMerging() {
-        Task<Void> mergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(
-                progressValue, fullListOfCompounds, observableList, mainSceneTableView);
-        Thread mergingThread = new Thread(mergingTask);
-        mergingThread.setDaemon(true);
-        mergingThread.start();
+        Task<Void> loadingWithoutMergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(
+                 fullListOfCompounds, observableList, mainSceneTableView, this);
+        Thread loadingWithoutMergingThread = new Thread(loadingWithoutMergingTask);
+        loadingWithoutMergingThread.setDaemon(true);
+        loadingWithoutMergingThread.start();
     }
 }
 

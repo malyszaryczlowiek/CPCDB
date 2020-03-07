@@ -11,13 +11,14 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 /**
- * Class is thread-save. Due to possession of Text and ProgressBar references it can be used
- * only in JavaFX Main Thread.
+ * Class is thread-save. Due to possession of Text and ProgressBar references, methods modifying these references
+ * can be called only in JavaFX Main Thread. Usually this is done in message and progress listeners of using Tasks.
  */
 public class CurrentStatusManager
 {
     private static Text currentStatus;
     private static ProgressBar progressBar;
+    private static double progressValue = 0.0;
 
     public static CurrentStatusManager getThisCurrentStatusManager() throws NullPointerException {
         if (currentStatus == null) throw new NullPointerException(
@@ -35,39 +36,32 @@ public class CurrentStatusManager
 
     private CurrentStatusManager() {}
 
-    public synchronized void setCurrentStatus(String text) { currentStatus.setText(text); }
-
-    public synchronized void setErrorMessage(String error) {
-        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
-        currentStatus.setFill(Paint.valueOf("red"));
-        currentStatus.setText(error);
-    }
-
-    public synchronized void setWarningMessage(String warning) {
-        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
-        currentStatus.setFill(Paint.valueOf("orange"));
-        currentStatus.setText(warning);
-    }
-
-    public synchronized void resetFont() {
+    private void resetFont() {
         currentStatus.setFont(Font.getDefault());
         currentStatus.setFill(Paint.valueOf("black"));
     }
 
-    public synchronized void setErrorStatus(String error, double progressBarValue) {
-            currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
-            currentStatus.setFill(Paint.valueOf("red"));
-            currentStatus.setText(error);
-            progressBar.setProgress(progressBarValue);
+    public synchronized void setWarningStatus(String warning) {
+        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
+        currentStatus.setFill(Paint.valueOf("orange"));
+        currentStatus.setText(warning);
+        progressValue = 0.0;
+        progressBar.setProgress(progressValue);
     }
 
-    public synchronized void setInfoStatus(String info, double progressBarValue) {
+    public synchronized void setErrorStatus(String error) {
+        currentStatus.setFont(Font.font("System", FontWeight.BOLD, 13));
+        currentStatus.setFill(Paint.valueOf("red"));
+        currentStatus.setText(error);
+        progressValue = 0.0;
+        progressBar.setProgress(progressValue);
+    }
+
+    public synchronized void setInfoStatus(String info) {
         resetFont();
+        progressBar.setProgress(progressValue);
         currentStatus.setText(info);
-        progressBar.setProgress(progressBarValue);
     }
-
-    public synchronized void setProgressValue(double newValue) { progressBar.setProgress( newValue); }
 
     public synchronized void onCurrentStatusTextClicked() {
         String text = currentStatus.getText();
@@ -91,7 +85,18 @@ public class CurrentStatusManager
         }
         resetFont();
     }
+
+    public synchronized void addToProgressValue(double addToProgressBar) {
+        progressValue += addToProgressBar;
+        progressBar.setProgress(progressValue);
+    }
+
+    public synchronized void setProgressValue(double newValue) { progressValue = newValue; }
 }
+
+//public synchronized void updateProgressBar() { progressBar.setProgress( progressValue ); }
+
+
 
     /*
     public void setGreenFont() {

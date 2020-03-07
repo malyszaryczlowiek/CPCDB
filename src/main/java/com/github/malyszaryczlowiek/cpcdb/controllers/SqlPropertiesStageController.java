@@ -116,19 +116,16 @@ public class SqlPropertiesStageController implements Initializable
         String remotePortNumberString = remotePortNumber.getText();
         String remoteUserNameString = remoteUser.getText();
         String remotePassphraseString = remotePassphrase.getText();
-
         SecureProperties.setProperty("settings.db.remote.RDBMS", "mysql");
         SecureProperties.setProperty("remoteDBExists", "false");
         SecureProperties.setProperty("settings.db.remote.serverAddressIP", remoteServerAddressIPString);
         SecureProperties.setProperty("settings.db.remote.portNumber", remotePortNumberString);
         SecureProperties.setProperty("settings.db.remote.user", remoteUserNameString);
         SecureProperties.setProperty("settings.db.remote.passphrase", remotePassphraseString);
-
         // Ustawianie zdalnego connectora
         boolean remoteConnectorConfigurationUseUnicode = remoteUseUnicode.isSelected();
         boolean remoteConnectorConfigurationUseJDBCCompilantTimezoneShift = remoteUseJDBCCompilantTimeZone.isSelected();
         boolean remoteConnectorConfigurationUseLegacyDateTimeCode = remoteUseLegacyDatetimeMode.isSelected();
-
         String remoteConnectorConfigurationServerTimezone = remoteServerTimeZone.getValue();
         SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings",
                 Boolean.toString( remoteServerConnectorSettingsCheckBox.isSelected() ));
@@ -146,9 +143,9 @@ public class SqlPropertiesStageController implements Initializable
         String localPortNumberString = localPortNumber.getText().trim();
         String localUserNameString = localUser.getText().trim();
         String localPassphraseString = localPassphrase.getText().trim();
-
         SecureProperties.setProperty("settings.db.local.RDBMS", "mysql");
         SecureProperties.setProperty("localDBExists", "false");
+        SecureProperties.setProperty("tryToConnectToLocalDb", "true");
         SecureProperties.setProperty("settings.db.local.serverAddressIP", "localhost");
         SecureProperties.setProperty("settings.db.local.portNumber", localPortNumberString);
         SecureProperties.setProperty("settings.db.local.user", localUserNameString);

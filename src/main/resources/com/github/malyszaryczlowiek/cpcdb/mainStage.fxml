@@ -28,7 +28,7 @@
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem fx:id="menuFileSave" mnemonicParsing="false" onAction="#onMenuFileSaveClicked" text="Save" />
                         <SeparatorMenuItem mnemonicParsing="false" />
-                        <MenuItem fx:id="menuFilePreferences" mnemonicParsing="false" onAction="#onMenuFilePreferencesClicked" text="Preferences" />
+                        <MenuItem fx:id="menuFileSettings" mnemonicParsing="false" onAction="#onMenuFileSettingsClicked" text="Settings" />
                         <SeparatorMenuItem mnemonicParsing="false" />
                         <MenuItem fx:id="menuFileQuit" mnemonicParsing="false" onAction="#onMenuFileQuit" text="Quit" />
                     </items>
@@ -63,15 +63,15 @@
         <columns>
             <TableColumn fx:id="idCol" editable="false" maxWidth="4100.0" minWidth="40.0" prefWidth="-1.0" text="Id" visible="false" />
           <TableColumn fx:id="smilesCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Smiles" />
-          <TableColumn fx:id="compoundNumCol" minWidth="150.0" prefWidth="-1.0" resizable="false" text="Compound Number" />
+          <TableColumn fx:id="compoundNumCol" minWidth="150.0" prefWidth="-1.0" text="Compound Number" />
             <TableColumn fx:id="amountCol" minWidth="100.0" prefWidth="-1.0" sortable="false" text="Amount" />
-            <TableColumn fx:id="unitCol" minWidth="70.0" prefWidth="-1.0" resizable="false" sortable="false" text="Unit" />
+            <TableColumn fx:id="unitCol" minWidth="70.0" prefWidth="-1.0" sortable="false" text="Unit" />
             <TableColumn fx:id="formCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Form" />
-            <TableColumn fx:id="tempStabilityCol" minWidth="120.0" prefWidth="-1.0" resizable="false" sortable="false" text="Temp Stability" />
-            <TableColumn fx:id="argonCol" minWidth="70.0" prefWidth="-1.0" resizable="false" sortable="false" text="Argon" />
+            <TableColumn fx:id="tempStabilityCol" minWidth="120.0" prefWidth="-1.0" sortable="false" text="Temp Stability" />
+            <TableColumn fx:id="argonCol" minWidth="70.0" prefWidth="-1.0" sortable="false" text="Argon" />
             <TableColumn fx:id="containerCol" minWidth="300.0" prefWidth="-1.0" sortable="false" text="Container" />
             <TableColumn fx:id="storagePlaceCol" minWidth="350.0" prefWidth="-1.0" sortable="false" text="Storage Place" />
-            <TableColumn fx:id="lastModificationCol" editable="false" minWidth="230.0" prefWidth="230.0" resizable="false" text="Last Modification" />
+            <TableColumn fx:id="lastModificationCol" editable="false" minWidth="230.0" prefWidth="230.0" text="Last Modification" />
             <TableColumn fx:id="additionalInfoCol" minWidth="652.0" prefWidth="652.0" sortable="false" text="Additional Info" />
         </columns>
          <contextMenu>

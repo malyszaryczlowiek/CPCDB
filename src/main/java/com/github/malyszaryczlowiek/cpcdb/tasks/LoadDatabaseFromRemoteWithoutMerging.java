@@ -5,16 +5,21 @@ import com.github.malyszaryczlowiek.cpcdb.alerts.ErrorFlagsManager;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.TempStability;
 import com.github.malyszaryczlowiek.cpcdb.compound.Unit;
+import com.github.malyszaryczlowiek.cpcdb.controllers.MainStageController;
 import com.github.malyszaryczlowiek.cpcdb.db.ConnectionManager;
-import com.github.malyszaryczlowiek.cpcdb.locks.LockProvider;
-import com.github.malyszaryczlowiek.cpcdb.locks.LockTypes;
-
 import com.github.malyszaryczlowiek.cpcdb.managers.CurrentStatusManager;
-import javafx.beans.property.DoubleProperty;
+import com.github.malyszaryczlowiek.cpcdb.properties.SecureProperties;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ErrorType;
+import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.ShortAlertWindowFactory;
+
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.scene.control.TableView;
+import javafx.util.Duration;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,43 +29,44 @@ import java.util.List;
 
 public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
 {
-    private LockProvider lockProvider;
-    private DoubleProperty progressValue;
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private TableView<Compound> mainSceneTableView;
+    private MainStageController mainStageController;
 
-    public static Task<Void> getTask(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                                     ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView) {
+    /**
+     * This method is called from Main JavaFX thread.
+     */
+    public static Task<Void> getTask( List<Compound> fullListOfCompounds,
+                                     ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                                     MainStageController mainStageController) {
         LoadDatabaseFromRemoteWithoutMerging task = new LoadDatabaseFromRemoteWithoutMerging(
-                        progressValue, fullListOfCompounds, observableList, mainSceneTableView);
+                         fullListOfCompounds, observableList, mainSceneTableView, mainStageController);
         task.setUpTaskListeners();
         return task;
     }
 
-    private LoadDatabaseFromRemoteWithoutMerging(DoubleProperty progressValue, List<Compound> fullListOfCompounds,
-                                   ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView) {
-        lockProvider = LockProvider.getLockProvider();
-        this.progressValue = progressValue;
+    /**
+     * This method is called from Main JavaFX thread.
+     */
+    private LoadDatabaseFromRemoteWithoutMerging( List<Compound> fullListOfCompounds,
+                                   ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                                                 MainStageController mainStageController) {
         this.fullListOfCompounds = fullListOfCompounds;
         this.observableList = observableList;
         this.mainSceneTableView = mainSceneTableView;
+        this.mainStageController = mainStageController;
     }
 
+    /**
+     * This method is called from Main JavaFX thread.
+     */
     private void setUpTaskListeners() {
-        this.messageProperty().addListener( (observable, oldMessage, newMessage) -> {
-                    CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
-                    currentStatusManager.setCurrentStatus(newMessage);
-        });
-        this.progressProperty().addListener((observable, oldValue, newValue) -> {
-                    CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
-                    currentStatusManager.setProgressValue( (Double) newValue );
-        });
-        this.titleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue.equals("Reloading Remote Server Database Done")){
-                CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
-                currentStatusManager.setCurrentStatus("Reloading Remote Server Database Done");
-                zrobić sprawdzenie z tryToLoadToLocalDb // if (SecureProperties.getProperty("tryToLoadToLocalDb").equals("true))
+        messageProperty().addListener( (observable, oldMessage, newMessage) -> manageNewCommunicates(newMessage) );
+        titleProperty().addListener((observable, oldValue, newValue) -> {
+            boolean shouldWeConnectToLocalDb = SecureProperties.getProperty("tryToConnectToLocalDb").equals("true");
+            CurrentStatusManager.getThisCurrentStatusManager().setProgressValue(0.0);  // if we do not send data to local db we ended work and can reset progress value to 0.0
+            if ( shouldWeConnectToLocalDb && newValue.equals("reloadingRemoteServerDatabaseDone") ){
                 Task<Void> updatingTask = UpdateLocalDb.getTask(observableList); // here we updating our local server
                 Thread updatingLocalDbThread = new Thread(updatingTask);
                 updatingLocalDbThread.setDaemon(true);
@@ -72,17 +78,46 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
     @Override
     protected Void call() {
         try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-            boolean connectedToRemoteDb =ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
-            if ( !connectedToRemoteDb && connection != null) loadTable(connection);
-            else updateMessage("Reconnection to Remote Server failed.");
+            boolean connectedToRemoteDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            boolean incorrectRemotePassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
+            if (connectedToRemoteDb) updateMessage("cannotConnectToRemoteDb");
+            if (incorrectRemotePassphrase) updateMessage("incorrectRemotePassphrase");
+            else if ( connection != null) loadTable(connection);
+            else updateTitle("Reconnection to Remote Server failed.");
         }
         catch (SQLException e) { e.printStackTrace(); }
         return null;
     }
 
+    /**
+     * This method is called from Main JavaFX thread.
+     */
+    private void manageNewCommunicates(String newMessage) {
+        CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+        switch (newMessage) {
+            case "cannotConnectToRemoteDb":
+                ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
+                startService(); // Wprowadzić enum service flag żeby service wiedział czy po połączeniu ma wyświetlić informacje o tym czy ma przeładować
+                currentStatusManager.setErrorStatus("Error (Click here for more info)");
+                break;
+            case "incorrectRemotePassphrase":
+                ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
+                currentStatusManager.setErrorStatus("Error - Incorrect UserName or Passphrase");
+                break;
+            case "reloadingRemoteServerDatabaseDone":
+                currentStatusManager.setProgressValue(0.0);
+                currentStatusManager.setInfoStatus("Reloading Remote Server Database Done");
+                break;
+            default:
+                currentStatusManager.setInfoStatus(newMessage);
+                break;
+        }
+    }
+
     private void loadTable(Connection connection)  {
-        updateMessage("Connecting to Database");
-        updateProgress(0.0,1.0);
+        CurrentStatusManager currentStatusManager = CurrentStatusManager.getThisCurrentStatusManager();
+        currentStatusManager.setProgressValue(0.05);
+        updateMessage("Connecting to Database...");
         final String numberOfRowsQuery = "SELECT COUNT(*) FROM compounds";
         int size = 0;
         try {
@@ -93,14 +128,10 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
         final String loadDBSQLQuery = "SELECT * FROM compounds";
         try {
             PreparedStatement loadDBStatement = connection.prepareStatement(loadDBSQLQuery);
-            synchronized (lockProvider.getLock(LockTypes.PROGRESS_VALUE)) {
-                progressValue.setValue( progressValue.get() + 0.1);
-            }
-            updateMessage("Downloading data from Remote Server");
-            updateProgress(0.05, 1.0);
+            updateMessage("Downloading data from Server...");
             ResultSet resultSet = loadDBStatement.executeQuery();
-            updateMessage("Loading downloaded data");
-            updateProgress(0.1, 1.0);
+            currentStatusManager.setProgressValue(0.1);
+            updateMessage("Loading downloaded data...");
             int index = 0;
             fullListOfCompounds.clear();
             observableList.clear();
@@ -123,20 +154,28 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
                 compound.setId(id);
                 compound.setSavedInDatabase(true);
                 fullListOfCompounds.add(compound);
-                ++index;
+                currentStatusManager.addToProgressValue(0.9 * ( 1.0 / ((double) size)));
                 if (index % 100 == 0) {
-                    double loadedPercentage = Math.round( (double) index / ((double) size) * 100);
+                    double loadedPercentage = BigDecimal.valueOf( (double) ++index / ((double) size) * 100 )
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue();
                     updateMessage("Loaded " + loadedPercentage + "%");
-                    updateProgress(0.1 + loadedPercentage * 0.9, 1.0);
                 }
             }
-            updateMessage("Refreshing Table");
+            updateMessage("Refreshing table");
             observableList.setAll(fullListOfCompounds);
             mainSceneTableView.setItems(observableList);
         }
         catch (SQLException e) { e.printStackTrace(); }
-        updateProgress(0.0,1.0);
-        updateTitle("Reloading Remote Server Database Done");
+        updateTitle("reloadingRemoteServerDatabaseDone");
+    }
+
+    /**
+     * This method is called from Main JavaFX thread.
+     */
+    private void startService() {
+        ScheduledService<Void> databasePingService = PingService.getService(mainStageController);
+        databasePingService.setPeriod(Duration.seconds(3));
+        databasePingService.start();
     }
 }
 

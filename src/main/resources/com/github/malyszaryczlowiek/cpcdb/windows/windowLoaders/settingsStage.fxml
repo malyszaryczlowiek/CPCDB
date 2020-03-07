@@ -93,6 +93,8 @@
                         <Label alignment="CENTER_RIGHT" layoutX="10.0" layoutY="49.0" prefHeight="25.0" prefWidth="260.0" text="Table font size:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="55.0" />
                         <Slider fx:id="fontSizeSlider" blockIncrement="1.0" layoutX="280.0" layoutY="55.0" majorTickUnit="1.0" max="24.0" min="13.0" minorTickCount="1" prefHeight="26.0" prefWidth="520.0" showTickLabels="true" showTickMarks="true" snapToTicks="true" value="15.0" AnchorPane.leftAnchor="280.0" AnchorPane.rightAnchor="170.0" AnchorPane.topAnchor="55.0" />
                         <Label fx:id="fontSizeLabel" alignment="CENTER" layoutX="810.0" layoutY="55.0" prefHeight="25.0" prefWidth="150.0" text="15 px" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="55.0" />
+                        <Label alignment="CENTER_RIGHT" layoutX="73.0" layoutY="131.0" prefHeight="25.0" prefWidth="260.0" text="Try to connect to Local Server:" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="105.0" />
+                        <CheckBox fx:id="connectToLocalServerCheckBox" layoutX="280.0" layoutY="109.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="75.0" selected="true" text="True" AnchorPane.leftAnchor="280.0" AnchorPane.topAnchor="105.0" />
                      </children></AnchorPane>
             </content>
           </Tab>

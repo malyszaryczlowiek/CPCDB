@@ -52,10 +52,10 @@ public class SettingsStageController implements Initializable
 
     @FXML private Slider fontSizeSlider;
     @FXML private Label fontSizeLabel;
+    @FXML private CheckBox connectToLocalServerCheckBox;
 
     private ColumnManager columnManager;
     private String oldFontSize;
-
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -66,29 +66,18 @@ public class SettingsStageController implements Initializable
                 remotePortNumber.setText( SecureProperties.getProperty("settings.db.remote.portNumber") );
                 remoteUser.setText( SecureProperties.getProperty("settings.db.remote.user") );
                 remotePassphrase.setText( SecureProperties.getProperty("settings.db.remote.passphrase") );
-                remoteServerConnectorSettingsCheckBox.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings")
-                                .equals("true") );
-                remoteUseUnicode.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.remote.connectorConfiguration.useUnicode")
-                                .equals("true") );
-                remoteUseJDBCCompilantTimeZone.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift")
-                                .equals("true") );
-                remoteUseLegacyDatetimeMode.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode")
-                                .equals("true") );
+                remoteServerConnectorSettingsCheckBox.setSelected( SecureProperties.getProperty(
+                        "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings").equals("true") );
+                remoteUseUnicode.setSelected( SecureProperties.getProperty(
+                        "settings.db.remote.connectorConfiguration.useUnicode").equals("true") );
+                remoteUseJDBCCompilantTimeZone.setSelected( SecureProperties.getProperty(
+                        "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift").equals("true") );
+                remoteUseLegacyDatetimeMode.setSelected( SecureProperties.getProperty(
+                                "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode").equals("true") );
                 remoteServerTimeZone.setItems( FXCollections.observableList( Arrays.asList(timeZones) ) );
-                remoteServerTimeZone.setValue(
-                        SecureProperties.getProperty(
+                remoteServerTimeZone.setValue( SecureProperties.getProperty(
                                 "settings.db.remote.connectorConfiguration.serverTimezone") );
-
                 useRemoteServerConnectorCheckBoxClicked();
-
                 return null;
             }
         };
@@ -101,28 +90,22 @@ public class SettingsStageController implements Initializable
                 localPortNumber.setText( SecureProperties.getProperty("settings.db.local.portNumber") );
                 localUser.setText( SecureProperties.getProperty("settings.db.local.user") );
                 localPassphrase.setText( SecureProperties.getProperty("settings.db.local.passphrase") );
-                localServerConnectorSettingsCheckBox.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings")
-                                .equals("true") );
-                localUseUnicode.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.local.connectorConfiguration.useUnicode")
-                                .equals("true") );
-                localUseJDBCCompilantTimeZone.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift")
-                                .equals("true") );
-                localUseLegacyDatetimeMode.setSelected(
-                        SecureProperties.getProperty(
-                                "settings.db.local.connectorConfiguration.useLegacyDateTimeCode")
-                                .equals("true") );
+                localServerConnectorSettingsCheckBox.setSelected( SecureProperties.getProperty(
+                        "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings").equals("true") );
+                localUseUnicode.setSelected( SecureProperties.getProperty(
+                                "settings.db.local.connectorConfiguration.useUnicode").equals("true") );
+                localUseJDBCCompilantTimeZone.setSelected( SecureProperties.getProperty(
+                        "settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift").equals("true") );
+                localUseLegacyDatetimeMode.setSelected( SecureProperties.getProperty(
+                        "settings.db.local.connectorConfiguration.useLegacyDateTimeCode").equals("true") );
                 localServerTimeZone.setItems( FXCollections.observableList( Arrays.asList(timeZones) ) );
                 localServerTimeZone.setValue( SecureProperties.getProperty(
                         "settings.db.local.connectorConfiguration.serverTimezone") );
-
+                boolean connectToLocalDb = SecureProperties.getProperty("tryToConnectToLocalDb").equals("true");
+                connectToLocalServerCheckBox.setSelected( connectToLocalDb);
+                if (connectToLocalDb) connectToLocalServerCheckBox.setText("True");
+                else connectToLocalServerCheckBox.setText("False");
                 useLocalServerConnectorCheckBoxClicked();
-
                 switch ( SecureProperties.getProperty("settings.keyValidityDuration") ) {
                     case "always":
                         keyValidityDurationSlider.adjustValue(.0);
@@ -156,47 +139,40 @@ public class SettingsStageController implements Initializable
                         keyValidityDurationLabel.setText(duration[0]);
                         break;
                 }
-
                 settingUpFontSizeConfiguration();
-
-                keyValidityDurationSlider.valueProperty().addListener(
-                        (ObservableValue<? extends Number> observableValue, Number number, Number t1) -> {
+                keyValidityDurationSlider.valueProperty()
+                        .addListener( (ObservableValue<? extends Number> observableValue, Number number, Number t1) -> {
                             int index = t1.intValue();
                             keyValidityDurationLabel.setText(duration[index]);
                             long l = Math.round( t1.doubleValue() );
                             keyValidityDurationSlider.setValue((double) l);
                         }
                 );
-
-                fontSizeSlider.valueProperty().addListener(
-                        (observable, oldValue, newValue) -> {
-                            int newIndex = newValue.intValue();
-                            fontSizeLabel.setText( newIndex + " px");
-                            long l = Math.round( newValue.doubleValue() );
-                            fontSizeSlider.setValue((double) l);
-                            columnManager.changeFontSize(fontSize, fontSize[newIndex-13]);
-                        }
-                );
+                fontSizeSlider.valueProperty().addListener( (observable, oldValue, newValue) -> {
+                    int newIndex = newValue.intValue();
+                    fontSizeLabel.setText( newIndex + " px");
+                    long l = Math.round( newValue.doubleValue() );
+                    fontSizeSlider.setValue((double) l);
+                    columnManager.changeFontSize(fontSize, fontSize[newIndex-13]);
+                });
+                connectToLocalServerCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue) connectToLocalServerCheckBox.setText("True");
+                    else connectToLocalServerCheckBox.setText("False");
+                });
                 return null;
             }
         };
-
         Thread thread1 = new Thread(task1);
         Thread thread2 = new Thread(task2);
-
         thread1.setDaemon(true);
         thread2.setDaemon(true);
-
         thread1.start();
         thread2.start();
-
         timer.stopTimer("czas inicjalizacji otwierania okna ustawień z 2ma wątkami");
     }
 
     @FXML
     private void onSaveButtonClicked() {
-        LaunchTimer timer = new LaunchTimer();
-
         Task<Void> task0 = new Task<>()
         {
             @Override
@@ -208,7 +184,6 @@ public class SettingsStageController implements Initializable
                 return null;
             }
         };
-
         Task<Integer> task1 = new Task<>()
         {
             @Override
@@ -220,20 +195,14 @@ public class SettingsStageController implements Initializable
                 return null;
             }
         };
-        ///*
         Thread thread0 = new Thread(task0);
         Thread thread1 = new Thread(task1);
-
         thread0.setDaemon(true);
         thread1.setDaemon(true);
-
         thread0.start();
         thread1.start();
-
         stage.close();
-        timer.stopTimer("zamykanie okna ustawień z dwoma wątkami");
     }
-
 
     @FXML
     protected void useRemoteServerConnectorCheckBoxClicked() {
@@ -271,47 +240,31 @@ public class SettingsStageController implements Initializable
         stage.close();
     }
 
-    public void setStage(Stage stage) {
-        this.stage = stage;
-
-    }
+    public void setStage(Stage stage) { this.stage = stage; }
 
     private void settingUpRemoteServerConfiguration() {
         String remoteServerAddressIPString = remoteServerAddressIP.getText().trim();
         String remotePortNumberString = remotePortNumber.getText().trim();
         String remoteUserNameString = remoteUser.getText().trim();
         String remotePassphraseString = remotePassphrase.getText().trim();
-
         SecureProperties.setProperty("settings.db.remote.serverAddressIP", remoteServerAddressIPString);
         SecureProperties.setProperty("settings.db.remote.portNumber", remotePortNumberString);
         SecureProperties.setProperty("settings.db.remote.user", remoteUserNameString);
         SecureProperties.setProperty("settings.db.remote.passphrase", remotePassphraseString);
-
         // Ustawianie zdalnego connectora
-
         boolean remoteConnectorConfigurationUseUnicode = remoteUseUnicode.isSelected();
         boolean remoteConnectorConfigurationUseJDBCCompilantTimezoneShift = remoteUseJDBCCompilantTimeZone.isSelected();
         boolean remoteConnectorConfigurationUseLegacyDateTimeCode = remoteUseLegacyDatetimeMode.isSelected();
         String remoteConnectorConfigurationServerTimezone = remoteServerTimeZone.getValue();
-
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings",
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useRemoteConnectorServerSettings",
                 Boolean.toString( remoteServerConnectorSettingsCheckBox.isSelected() ));
-
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useUnicode",
-                Boolean.toString( remoteConnectorConfigurationUseUnicode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift",
-                Boolean.toString( remoteConnectorConfigurationUseJDBCCompilantTimezoneShift )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode",
-                Boolean.toString( remoteConnectorConfigurationUseLegacyDateTimeCode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.remote.connectorConfiguration.serverTimezone",
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useUnicode",
+                Boolean.toString( remoteConnectorConfigurationUseUnicode ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useJDBCCompilantTimezoneShift",
+                Boolean.toString( remoteConnectorConfigurationUseJDBCCompilantTimezoneShift ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.useLegacyDateTimeCode",
+                Boolean.toString( remoteConnectorConfigurationUseLegacyDateTimeCode ) );
+        SecureProperties.setProperty( "settings.db.remote.connectorConfiguration.serverTimezone",
                 remoteConnectorConfigurationServerTimezone
         );
     }
@@ -320,36 +273,25 @@ public class SettingsStageController implements Initializable
         String localPortNumberString = localPortNumber.getText().trim();
         String localUserNameString = localUser.getText().trim();
         String localPassphraseString = localPassphrase.getText().trim();
-
         SecureProperties.setProperty("settings.db.local.portNumber", localPortNumberString);
         SecureProperties.setProperty("settings.db.local.user", localUserNameString);
         SecureProperties.setProperty("settings.db.local.passphrase", localPassphraseString);
-
         boolean localConnectorConfigurationUseUnicode = localUseUnicode.isSelected();
         boolean localConnectorConfigurationUseJDBCCompilantTimezoneShift = localUseJDBCCompilantTimeZone.isSelected();
         boolean localConnectorConfigurationUseLegacyDateTimeCode = localUseLegacyDatetimeMode.isSelected();
         String localConnectorConfigurationServerTimezone = localServerTimeZone.getValue();
-
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings",
-                Boolean.toString( localServerConnectorSettingsCheckBox.isSelected() )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useUnicode",
-                Boolean.toString( localConnectorConfigurationUseUnicode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift",
-                Boolean.toString( localConnectorConfigurationUseJDBCCompilantTimezoneShift )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.useLegacyDateTimeCode",
-                Boolean.toString( localConnectorConfigurationUseLegacyDateTimeCode )
-        );
-        SecureProperties.setProperty(
-                "settings.db.local.connectorConfiguration.serverTimezone",
-                localConnectorConfigurationServerTimezone
-        );
+        boolean connectToLocalDb = connectToLocalServerCheckBox.isSelected();
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useLocalConnectorServerSettings",
+                Boolean.toString( localServerConnectorSettingsCheckBox.isSelected() ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useUnicode",
+                Boolean.toString( localConnectorConfigurationUseUnicode ) );
+        SecureProperties.setProperty("settings.db.local.connectorConfiguration.useJDBCCompilantTimezoneShift",
+                Boolean.toString( localConnectorConfigurationUseJDBCCompilantTimezoneShift ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.useLegacyDateTimeCode",
+                Boolean.toString( localConnectorConfigurationUseLegacyDateTimeCode ) );
+        SecureProperties.setProperty( "settings.db.local.connectorConfiguration.serverTimezone",
+                localConnectorConfigurationServerTimezone );
+        SecureProperties.setProperty("tryToConnectToLocalDb", Boolean.toString(connectToLocalDb));
     }
 
     private void settingUpFontSizeConfiguration() throws IllegalArgumentException{
@@ -408,6 +350,11 @@ public class SettingsStageController implements Initializable
         }
     }
 }
+
+
+
+
+
 
 // to było w set Stage
 /*

@@ -33,7 +33,5 @@ class SettingsWindow implements ShowAble
     }
 
     @Override
-    public void show() {
-        preferencesStage.show();
-    }
+    public void show() { preferencesStage.show(); }
 }
