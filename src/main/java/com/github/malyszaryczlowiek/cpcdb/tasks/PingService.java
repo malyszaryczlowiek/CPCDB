@@ -31,7 +31,7 @@ public class PingService extends ScheduledService<Void>
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
+                try (Connection connection = ConnectionManager.connectToRemoteDb()) {
                     if (connection != null) updateMessage("connectionEstablished");
                 } catch (SQLException e) { System.out.println(e.getMessage()); }
                 return null;

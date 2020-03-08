@@ -4,13 +4,8 @@ import java.sql.Connection;
 
 public class ConnectionManager
 {
-    public static Connection connectToAnyDb(){
+    public static Connection connectToRemoteDb(){
         ConnectionHandler handler = new RemoteConnectionHandler();
-        return handler.connect();
-    }
-
-    public static Connection reconnectToRemoteDb(){
-        ConnectionHandler handler = new ServiceReconnectionHandler();
         return handler.connect();
     }
 

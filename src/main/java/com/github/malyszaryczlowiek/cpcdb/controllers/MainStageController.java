@@ -2,9 +2,9 @@ package com.github.malyszaryczlowiek.cpcdb.controllers;
 
 import com.github.malyszaryczlowiek.cpcdb.buffer.ActionType;
 import com.github.malyszaryczlowiek.cpcdb.buffer.BufferExecutor;
-import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabase;
-import com.github.malyszaryczlowiek.cpcdb.tasks.LoadDatabaseFromRemoteWithoutMerging;
-import com.github.malyszaryczlowiek.cpcdb.tasks.MergeRemoteDbWithLocal;
+import com.github.malyszaryczlowiek.cpcdb.tasks.LoadRemoteDatabase;
+import com.github.malyszaryczlowiek.cpcdb.tasks.OperationFlag;
+import com.github.malyszaryczlowiek.cpcdb.tasks.UpdateRemoteDatabase;
 import com.github.malyszaryczlowiek.cpcdb.windows.alertWindows.*;
 import com.github.malyszaryczlowiek.cpcdb.alerts.*;
 import com.github.malyszaryczlowiek.cpcdb.managers.initializers.*;
@@ -22,6 +22,7 @@ import com.github.malyszaryczlowiek.cpcdb.windows.windowLoaders.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -100,6 +101,9 @@ public class MainStageController implements Initializable,
     private LaunchTimer initializationTimer;
     private LockProvider lockProvider;
     private CurrentStatusManager currentStatusManager;
+    private ScheduledService<Void> databasePingService = null;
+
+    //public MainStageController(ScheduledService<Void> databasePingService) {this.databasePingService = databasePingService;}
 
 
     @Override
@@ -120,7 +124,7 @@ public class MainStageController implements Initializable,
             fullListOfCompounds = new ArrayList<>();
             observableList = FXCollections.observableArrayList(fullListOfCompounds); // todo TE DWIE LINIJKI MOŻNA chyba przenieść do loadingdatabaseTask  12 linijek niżej
             mainSceneTableView.setItems(observableList);
-            bufferExecutor = BufferExecutor.getBufferExecutor(mainSceneTableView, observableList,
+            bufferExecutor = BufferExecutor.getBufferExecutor( mainSceneTableView, observableList,
                     menuEditUndo, menuEditRedo, menuFileSave);
             columnManager = new ColumnManager( new MenuItem[]{menuViewShowAllColumns, showAllColumnsContext},
                     smilesCol, compoundNumCol, amountCol, unitCol, formCol, tempStabilityCol,
@@ -128,8 +132,8 @@ public class MainStageController implements Initializable,
             ColumnInitializer.setUpInitializer(mainSceneTableView, bufferExecutor, observableList);
             ErrorFlagsManager.initializeErrorFlagsManager();
             if ( !SecureProperties.hasProperty("column.width.Smiles") ) columnManager.setAllColumnsWidthToProperties();
-            Task<String> loadingDatabaseTask = LoadDatabase.getTask(fullListOfCompounds,
-                    observableList, mainSceneTableView, currentStatusManager, this);
+            Task<String> loadingDatabaseTask = LoadRemoteDatabase.getTask(fullListOfCompounds, observableList,
+                    mainSceneTableView, this, databasePingService, true, OperationFlag.LOADING);
             Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
             loadingDatabaseThread.setDaemon(true);
             loadingDatabaseThread.start();
@@ -184,7 +188,7 @@ public class MainStageController implements Initializable,
             primaryStage.show();
             primaryStage.setOnCloseRequest( windowEvent -> {
                 windowEvent.consume();
-                closeProgram();
+                onMenuFileQuit();
             });
             mainSceneTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             mainSceneTableView.setOnContextMenuRequested( contextMenuEvent -> {
@@ -257,7 +261,13 @@ public class MainStageController implements Initializable,
      */
     @FXML
     protected void onMenuFileSaveClicked() { // saving changes
-        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(true);
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) {
+            Task<String> saveTask = UpdateRemoteDatabase.getTask( fullListOfCompounds, observableList,
+                    mainSceneTableView, this, databasePingService,true );
+            Thread saveThread = new Thread(saveTask);
+            saveThread.setDaemon(true);
+            saveThread.start();
+        }
     }
 
     @FXML
@@ -267,19 +277,30 @@ public class MainStageController implements Initializable,
 
     @FXML
     protected void onMenuFileLoadDataFromRemoteServer() {
-        // nie może być deamonem bo najpierw musimy zapisać dane do zdalnego serwera a dopiero następnie wczytać dane z zdalnego
-        if ( bufferExecutor.returnCurrentIndex() > 0 ) bufferExecutor.saveChangesToDatabase(false);  // saving changes
-        Task<String> loadingDatabaseTask = LoadDatabase.getTask(fullListOfCompounds, observableList,
-                mainSceneTableView, currentStatusManager, this);
-        Thread loadingDatabaseThread = new Thread(loadingDatabaseTask);
-        loadingDatabaseThread.setDaemon(true);
-        loadingDatabaseThread.start();
+        if ( bufferExecutor.returnCurrentIndex() > 0 ) { // merging
+            Task<String> saveTask = UpdateRemoteDatabase.getTask( fullListOfCompounds, observableList,
+                    mainSceneTableView, this, databasePingService, true );
+            Thread saveThread = new Thread(saveTask);
+            saveThread.setDaemon(true);
+            saveThread.start();
+        }
+        else { // simple load
+            Task<String> loadingWithoutMergingTask = LoadRemoteDatabase.getTask( fullListOfCompounds, observableList,
+                    mainSceneTableView, this, databasePingService,true, OperationFlag.LOADING);
+            Thread loadingWithoutMergingThread = new Thread(loadingWithoutMergingTask);
+            loadingWithoutMergingThread.setDaemon(true);
+            loadingWithoutMergingThread.start();
+        }
     }
 
     // FILE -> Quit
 
     @FXML
-    protected void onMenuFileQuit() { closeProgram(); }
+    protected void onMenuFileQuit() {
+        if ( bufferExecutor.returnCurrentIndex() > 0 )
+            WindowFactory.showWindow(WindowsEnum.SAVE_CHANGES_BEFORE_QUIT_WINDOW,this, null);
+        else onCloseProgramWithoutChanges();
+    }
 
     // EDIT
 
@@ -337,7 +358,7 @@ public class MainStageController implements Initializable,
         Integer index = observableList.indexOf(compound);
         Map<Integer, Compound> toInsert = new TreeMap<>();
         toInsert.put(index, compound);
-        bufferExecutor.addChange(ActionType.INSERT, toInsert,null,null); //  robię insert
+        bufferExecutor.addChange(ActionType.INSERT, toInsert,null,null); //  make insert to buffer
     }
 
 
@@ -394,26 +415,13 @@ public class MainStageController implements Initializable,
      * ###############################################
      */
 
-    private void closeProgram() {
-        if ( bufferExecutor.returnCurrentIndex() > 0 )
-            WindowFactory.showWindow(WindowsEnum.SAVE_CHANGES_BEFORE_QUIT_WINDOW,this, null);
-        else onCloseProgramWithoutChanges();
-    }
-
     @Override
     public void onSaveChangesAndCloseProgram() {
         LaunchTimer closeTimer = new LaunchTimer();
-        Task<Void> task1 = new Task<>()
-        {
-            @Override
-            protected Void call()
-            {
-                LaunchTimer saveTimer = new LaunchTimer();
-                bufferExecutor.saveChangesToDatabase(false); // make save
-                saveTimer.stopTimer("Save Timer is stopped");
-                return null;
-            }
-        };
+        Task<String> saveTask = UpdateRemoteDatabase.getTask( fullListOfCompounds, observableList,
+                mainSceneTableView, this, databasePingService,false );
+        Thread saveThread = new Thread(saveTask);
+        saveThread.start();
         Task<Void> task2 = new Task<>()
         {
             @Override
@@ -424,13 +432,11 @@ public class MainStageController implements Initializable,
                 return null;
             }
         };
-        Thread thread1 = new Thread(task1);
         Thread thread2 = new Thread(task2);
-        thread1.start();
         thread2.start();
         try {
             thread2.join();
-            thread1.join();
+            saveThread.join();
         }
         catch (InterruptedException e) { e.printStackTrace(); }
         closeTimer.stopTimer("closing time when must save data to DB");
@@ -458,9 +464,10 @@ public class MainStageController implements Initializable,
      * Method implemented from interface MergingRemoteDbController.Mergeable
      */
     @Override
-    public void mergeWithRemote() {
-        Task<Void> mergingTask = MergeRemoteDbWithLocal.getTask();
-        Thread mergingThread = new Thread(mergingTask);
+    public void mergeWithRemote() { // tutaj będzie najpierw save, potem wczytanie danych ze zdalnej bazy danych, wyświetlenie i zapisanie w local
+        Task<String> mergeRemote = UpdateRemoteDatabase.getTask(fullListOfCompounds, observableList,
+                mainSceneTableView, this, databasePingService, true);
+        Thread mergingThread = new Thread(mergeRemote);
         mergingThread.setDaemon(true);
         mergingThread.start();
     }
@@ -470,8 +477,8 @@ public class MainStageController implements Initializable,
      */
     @Override
     public void loadFromRemoteWithoutMerging() {
-        Task<Void> loadingWithoutMergingTask = LoadDatabaseFromRemoteWithoutMerging.getTask(
-                 fullListOfCompounds, observableList, mainSceneTableView, this);
+        Task<String> loadingWithoutMergingTask = LoadRemoteDatabase.getTask( fullListOfCompounds, observableList,
+                mainSceneTableView, this, databasePingService, true, OperationFlag.LOADING);
         Thread loadingWithoutMergingThread = new Thread(loadingWithoutMergingTask);
         loadingWithoutMergingThread.setDaemon(true);
         loadingWithoutMergingThread.start();

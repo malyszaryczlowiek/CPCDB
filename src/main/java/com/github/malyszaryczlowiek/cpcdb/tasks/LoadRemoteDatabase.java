@@ -18,8 +18,6 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,21 +25,32 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
+/**
+ * W tej klasie:
+ * 1. pobieramy dane ze zdalnego servera, (NIE wchodzimy w pobieranie z lokalnego)
+ * 2. wczytujemy je do programu, (lub wyświetlamy komunikat o błędzie)
+ * 3. wyświetlamy w tabeli
+ * 4. zapisujemy na lokalnym serwerze (jeśli trzeba) === UpdateLocalDb
+ */
+public class LoadRemoteDatabase extends Task<String>
 {
     private List<Compound> fullListOfCompounds;
     private ObservableList<Compound> observableList;
     private TableView<Compound> mainSceneTableView;
     private MainStageController mainStageController;
+    private ScheduledService<Void> databasePingService;
+    private boolean displayInTable;
+    private OperationFlag operationFlag;
 
     /**
      * This method is called from Main JavaFX thread.
      */
-    public static Task<Void> getTask( List<Compound> fullListOfCompounds,
-                                     ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                                     MainStageController mainStageController) {
-        LoadDatabaseFromRemoteWithoutMerging task = new LoadDatabaseFromRemoteWithoutMerging(
-                         fullListOfCompounds, observableList, mainSceneTableView, mainStageController);
+    public static Task<String> getTask( List<Compound> fullListOfCompounds,
+                                        ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                                        MainStageController mainStageController, ScheduledService<Void> databasePingService,
+                                        boolean displayInTable, OperationFlag operationFlag) {
+        LoadRemoteDatabase task = new LoadRemoteDatabase( fullListOfCompounds, observableList, mainSceneTableView,
+                mainStageController, databasePingService, displayInTable, operationFlag);
         task.setUpTaskListeners();
         return task;
     }
@@ -49,13 +58,17 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
     /**
      * This method is called from Main JavaFX thread.
      */
-    private LoadDatabaseFromRemoteWithoutMerging( List<Compound> fullListOfCompounds,
-                                   ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
-                                                 MainStageController mainStageController) {
+    private LoadRemoteDatabase(List<Compound> fullListOfCompounds,
+                               ObservableList<Compound> observableList, TableView<Compound> mainSceneTableView,
+                               MainStageController mainStageController, ScheduledService<Void> databasePingService,
+                               boolean displayInTable, OperationFlag operationFlag) {
         this.fullListOfCompounds = fullListOfCompounds;
         this.observableList = observableList;
         this.mainSceneTableView = mainSceneTableView;
         this.mainStageController = mainStageController;
+        this.databasePingService = databasePingService;
+        this.displayInTable = displayInTable;
+        this.operationFlag = operationFlag;
     }
 
     /**
@@ -63,30 +76,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
      */
     private void setUpTaskListeners() {
         messageProperty().addListener( (observable, oldMessage, newMessage) -> manageNewCommunicates(newMessage) );
-        titleProperty().addListener((observable, oldValue, newValue) -> {
-            boolean shouldWeConnectToLocalDb = SecureProperties.getProperty("tryToConnectToLocalDb").equals("true");
-            CurrentStatusManager.getThisCurrentStatusManager().setProgressValue(0.0);  // if we do not send data to local db we ended work and can reset progress value to 0.0
-            if ( shouldWeConnectToLocalDb && newValue.equals("reloadingRemoteServerDatabaseDone") ){
-                Task<Void> updatingTask = UpdateLocalDb.getTask(observableList); // here we updating our local server
-                Thread updatingLocalDbThread = new Thread(updatingTask);
-                updatingLocalDbThread.setDaemon(true);
-                updatingLocalDbThread.start();
-            }
-        });
-    }
-
-    @Override
-    protected Void call() {
-        try (Connection connection = ConnectionManager.reconnectToRemoteDb()) {
-            boolean connectedToRemoteDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
-            boolean incorrectRemotePassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
-            if (connectedToRemoteDb) updateMessage("cannotConnectToRemoteDb");
-            if (incorrectRemotePassphrase) updateMessage("incorrectRemotePassphrase");
-            else if ( connection != null) loadTable(connection);
-            else updateTitle("Reconnection to Remote Server failed.");
-        }
-        catch (SQLException e) { e.printStackTrace(); }
-        return null;
+        titleProperty().addListener((observable, oldValue, newValue) -> manageNewCommunicates(newValue));
     }
 
     /**
@@ -97,21 +87,65 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
         switch (newMessage) {
             case "cannotConnectToRemoteDb":
                 ShortAlertWindowFactory.showWindow(ErrorType.CANNOT_CONNECT_TO_REMOTE_DB);
-                startService(); // Wprowadzić enum service flag żeby service wiedział czy po połączeniu ma wyświetlić informacje o tym czy ma przeładować
-                currentStatusManager.setErrorStatus("Error (Click here for more info)");
+                if ( SecureProperties.getProperty("tryToConnectToLocalDb").equals("true") ) {
+                    if (operationFlag.equals(OperationFlag.SAVING)) saveToLocalDatabase();
+                    else loadFromLocalDatabase(); }
+                else currentStatusManager.setErrorStatus("Error (Click here for more info)");
+                if (databasePingService == null) startService();
+                else if ( !databasePingService.isRunning() ) databasePingService.restart();
                 break;
             case "incorrectRemotePassphrase":
                 ShortAlertWindowFactory.showWindow(ErrorType.INCORRECT_REMOTE_PASSPHRASE);
-                currentStatusManager.setErrorStatus("Error - Incorrect UserName or Passphrase");
+                if ( SecureProperties.getProperty("tryToConnectToLocalDb").equals("true") ) {
+                    if (operationFlag.equals(OperationFlag.SAVING)) saveToLocalDatabase();
+                    else loadFromLocalDatabase(); }
+                else currentStatusManager.setErrorStatus("Error - Incorrect UserName or Passphrase");
                 break;
             case "reloadingRemoteServerDatabaseDone":
                 currentStatusManager.setProgressValue(0.0);
-                currentStatusManager.setInfoStatus("Reloading Remote Server Database Done");
+                if ( SecureProperties.getProperty("tryToConnectToLocalDb").equals("true") )
+                    saveToLocalDatabase();
+                else currentStatusManager.setInfoStatus("Reloading Remote Server Database Done");
+                break;
+            case "unknownError":
+                ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
+                currentStatusManager.setErrorStatus("Unknown Error Occurred");
                 break;
             default:
                 currentStatusManager.setInfoStatus(newMessage);
                 break;
         }
+    }
+
+    private void saveToLocalDatabase( ) {
+        Task<String> updateLocalDatabaseTask = UpdateLocalDatabase.getTask(observableList);
+        Thread updateLocalDatabaseThread = new Thread(updateLocalDatabaseTask);
+        updateLocalDatabaseThread.setDaemon(displayInTable);
+        updateLocalDatabaseThread.start();
+        try { updateLocalDatabaseThread.join(); }
+        catch (InterruptedException e) { e.printStackTrace(); }
+    }
+
+    private void loadFromLocalDatabase() {
+        Task<String> loadLocalDatabaseTask = LoadLocalDatabase.getTask(fullListOfCompounds,observableList,mainSceneTableView);
+        Thread loadLocalDatabaseThread = new Thread(loadLocalDatabaseTask);
+        loadLocalDatabaseThread.setDaemon(true);
+        loadLocalDatabaseThread.start();
+    }
+
+    @Override
+    protected String call() {
+        try (Connection connection = ConnectionManager.connectToRemoteDb()) {
+            boolean connectedToRemoteDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            boolean incorrectRemotePassphrase = ErrorFlagsManager.getError(
+                    ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
+            if (connectedToRemoteDb) updateMessage("cannotConnectToRemoteDb");
+            else if (incorrectRemotePassphrase) updateMessage("incorrectRemotePassphrase");
+            else if ( connection != null) loadTable(connection);
+            else updateMessage("unknownError");
+        }
+        catch (SQLException e) { e.printStackTrace(); }
+        return "Task ended";
     }
 
     private void loadTable(Connection connection)  {
@@ -155,15 +189,11 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
                 compound.setSavedInDatabase(true);
                 fullListOfCompounds.add(compound);
                 currentStatusManager.addToProgressValue(0.9 * ( 1.0 / ((double) size)));
-                if (index % 100 == 0) {
-                    double loadedPercentage = BigDecimal.valueOf( (double) ++index / ((double) size) * 100 )
-                            .setScale(2, RoundingMode.HALF_UP).doubleValue();
-                    updateMessage("Loaded " + loadedPercentage + "%");
-                }
+                if (index % 100 == 0) updateMessage("Loaded "+Math.round((double) ++index/((double) size)*100 )+"%");
             }
             updateMessage("Refreshing table");
-            observableList.setAll(fullListOfCompounds);
-            mainSceneTableView.setItems(observableList);
+            if (displayInTable) observableList.setAll(fullListOfCompounds);
+            if (displayInTable) mainSceneTableView.setItems(observableList);
         }
         catch (SQLException e) { e.printStackTrace(); }
         updateTitle("reloadingRemoteServerDatabaseDone");
@@ -173,7 +203,7 @@ public class LoadDatabaseFromRemoteWithoutMerging extends Task<Void>
      * This method is called from Main JavaFX thread.
      */
     private void startService() {
-        ScheduledService<Void> databasePingService = PingService.getService(mainStageController);
+        databasePingService = PingService.getService(mainStageController);
         databasePingService.setPeriod(Duration.seconds(3));
         databasePingService.start();
     }

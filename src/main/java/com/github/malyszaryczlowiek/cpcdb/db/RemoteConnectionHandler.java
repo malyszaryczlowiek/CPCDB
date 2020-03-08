@@ -22,17 +22,19 @@ class RemoteConnectionHandler implements ConnectionHandler
                     SecureProperties.getProperty("settings.db.remote.passphrase"));
             DatabaseAndTableCreator.createIfNotExist(CONNECTION, DatabaseLocation.REMOTE);
             SecureProperties.setProperty("remoteDBExists", "true");
+            ErrorFlagsManager.resetErrorFlag(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR);
+            ErrorFlagsManager.resetErrorFlag(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR);
             return CONNECTION;
         }
         catch ( CommunicationsException | java.sql.SQLNonTransientConnectionException e) { //CJCommunicationsException |
-            e.printStackTrace();
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, e.getMessage());
-            return new LocalConnectionHandler().connect();
+            ErrorFlagsManager.setErrorFlag(ErrorFlags.CONNECTION_TO_REMOTE_DB_ERROR, e.getMessage());
+            System.err.println(e.getMessage());
+            return null;
         }
         catch (SQLException e) {
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, e.getMessage());
-            e.printStackTrace();
-            return new LocalConnectionHandler().connect();
+            ErrorFlagsManager.setErrorFlag(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_REMOTE_DB_ERROR, e.getMessage());
+            System.err.println(e.getMessage());
+            return null;
         }
     }
 }

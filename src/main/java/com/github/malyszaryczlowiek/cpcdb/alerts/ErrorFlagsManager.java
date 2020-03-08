@@ -19,7 +19,7 @@ public class ErrorFlagsManager
     }
     public static Map<ErrorFlags, ErrorStatus> getMapOfErrors() { return mapOfErrors; }
 
-    public static void setErrorFlagTo(ErrorFlags flag, String errorMessage) {
+    public static void setErrorFlag(ErrorFlags flag, String errorMessage) {
         mapOfErrors.get(flag).setErrorMessage(errorMessage);
     }
 

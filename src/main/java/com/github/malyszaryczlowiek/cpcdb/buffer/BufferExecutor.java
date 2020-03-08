@@ -3,10 +3,7 @@ package com.github.malyszaryczlowiek.cpcdb.buffer;
 import com.github.malyszaryczlowiek.cpcdb.compound.Compound;
 import com.github.malyszaryczlowiek.cpcdb.compound.Field;
 
-import com.github.malyszaryczlowiek.cpcdb.db.SaveChangesToLocalDatabase;
-import com.github.malyszaryczlowiek.cpcdb.tasks.SaveChangesToRemoteDatabase;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
@@ -31,7 +28,7 @@ public class BufferExecutor implements Buffer, BufferState
 
     public static BufferExecutor getBufferExecutor( TableView<Compound> tableView,
                                                     ObservableList<Compound> observableListOfCompounds,
-                                                    MenuItem undo, MenuItem redo, MenuItem fileSave) {
+                                                    MenuItem undo, MenuItem redo, MenuItem fileSave ) {
         mainSceneTableView = tableView;
         observableList = observableListOfCompounds;
         menuEditUndo = undo;
@@ -85,25 +82,6 @@ public class BufferExecutor implements Buffer, BufferState
             else mapOfCompoundsToChangeInTableView.forEach( (index, comp) -> observableList.add(index, comp) );
         }
         checkUndoRedoMenuItems();
-    }
-
-    public void saveChangesToDatabase(boolean startAsDemon) { // TODO zrobić tutaj testy gdy zapisujemy dane na koniec i mamy nie demony oraz gdy robimy to w trakie i te wątki są demonami.
-        Task<Void> savingToRemoteDatabaseTask = SaveChangesToRemoteDatabase.getTask();
-        Task<Void> savingToLocalDatabaseTask = SaveChangesToLocalDatabase.getTask();
-        Thread savingToRemoteDatabaseThread = new Thread(savingToRemoteDatabaseTask);
-        Thread savingToLocalDatabaseThread = new Thread(savingToLocalDatabaseTask);
-        if (startAsDemon) {
-            savingToRemoteDatabaseThread.setDaemon(true);
-            savingToLocalDatabaseThread.setDaemon(true);
-        }
-        savingToRemoteDatabaseThread.start();
-        savingToLocalDatabaseThread.start();
-        if (!startAsDemon) {
-            try {
-                savingToRemoteDatabaseThread.join();
-                savingToLocalDatabaseThread.join();
-            } catch (InterruptedException e) { e.printStackTrace(); }
-        }
     }
 
     private void checkUndoRedoMenuItems() {

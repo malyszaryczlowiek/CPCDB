@@ -27,14 +27,14 @@ public class LocalConnectionHandler implements ConnectionHandler
             return CONNECTION;
         }
         catch ( CommunicationsException e) { // CJCommunicationsException |
-            e.printStackTrace();
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR, e.getMessage());
-            return new NoConnectionHandler().connect();
+            ErrorFlagsManager.setErrorFlag(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR, e.getMessage());
+            System.err.println(e.getMessage());
+            return null;
         }
         catch (SQLException e) {
-            e.printStackTrace();
-            ErrorFlagsManager.setErrorFlagTo(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR, e.getMessage());
-            return new NoConnectionHandler().connect();
+            ErrorFlagsManager.setErrorFlag(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR, e.getMessage());
+            System.err.println(e.getMessage());
+            return null;
         }
     }
 }

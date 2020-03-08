@@ -14,17 +14,20 @@ import javafx.concurrent.Task;
 import java.sql.*;
 import java.time.LocalDateTime;
 
-public class UpdateLocalDb extends Task<Void>
+/**
+ * Zapisuje aktualne dane z observableList do lokalnego serwera. TODO Class is finished
+ */
+public class UpdateLocalDatabase extends Task<String>
 {
     private ObservableList<Compound> observableList;
 
-    public static Task<Void> getTask(ObservableList<Compound> observableList) {
-        UpdateLocalDb updateLocalDb = new UpdateLocalDb(observableList);
-        updateLocalDb.setUpTaskListeners();
-        return updateLocalDb;
+    public static Task<String> getTask(ObservableList<Compound> observableList) {
+        UpdateLocalDatabase updateLocalDatabase = new UpdateLocalDatabase(observableList);
+        updateLocalDatabase.setUpTaskListeners();
+        return updateLocalDatabase;
     }
 
-    private UpdateLocalDb(ObservableList<Compound> observableList) { this.observableList = observableList; }
+    private UpdateLocalDatabase(ObservableList<Compound> observableList) { this.observableList = observableList; }
 
     /**
      * This method is called only from the main JavaFX Application Thread.
@@ -51,9 +54,9 @@ public class UpdateLocalDb extends Task<Void>
                 break;
             case "localDbUpdated":
                 currentStatusManager.setProgressValue(0.0);
-                currentStatusManager.setInfoStatus("Remote Database Downloaded & Local Updated");
+                currentStatusManager.setInfoStatus("Local Database Updated");
                 break;
-            case "UnknownError":
+            case "unknownError":
                 ShortAlertWindowFactory.showWindow(ErrorType.UNKNOWN_ERROR_OCCURRED);
                 currentStatusManager.setErrorStatus("Unknown Error");
                 break;
@@ -63,21 +66,19 @@ public class UpdateLocalDb extends Task<Void>
     }
 
     @Override
-    protected Void call() {
+    protected String call() {
         try ( Connection connection = ConnectionManager.connectToLocalDb() ) {
             boolean connectionToLocalDb = ErrorFlagsManager.getError(ErrorFlags.CONNECTION_TO_LOCAL_DB_ERROR);
             boolean incorrectLocalPassphrase = ErrorFlagsManager.getError(ErrorFlags.INCORRECT_USERNAME_OR_PASSPHRASE_TO_LOCAL_DB_ERROR);
-            if ( connectionToLocalDb && connection == null )
-                updateMessage("connectionError");
-            else if ( incorrectLocalPassphrase && connection == null )
-                updateMessage("incorrectPassphrase");
+            if ( connectionToLocalDb && connection == null ) updateMessage("connectionError");
+            else if ( incorrectLocalPassphrase && connection == null ) updateMessage("incorrectPassphrase");
             else if ( !incorrectLocalPassphrase && !connectionToLocalDb && connection != null ) {
                 updateMessage("updatingLocalDatabase");
                 updateLocalDatabase(connection); }
-            else updateMessage("UnknownError.");
+            else updateMessage("unknownError");
         }
         catch (SQLException e) { e.printStackTrace(); }
-        return null;
+        return "taskEnded";
     }
 
     private void updateLocalDatabase(Connection connection) {
@@ -123,9 +124,8 @@ public class UpdateLocalDb extends Task<Void>
                 addingStatement.executeUpdate();
 
                 double loadedPercentage = Math.round( (double) ++index / ((double) size) * 100);
-                currentStatusManager.addToProgressValue( loadedPercentage ); // 0.9 * ( 1.0 / ((double) size))
-                if (index % 100 == 0) // TODO dla dużych zbiorów można to uruchomić
-                    updateMessage("Loaded " + loadedPercentage + "%");
+                currentStatusManager.addToProgressValue(  0.9 * ( 1.0 / ((double) size)) ); // 0.9 * ( 1.0 / ((double) size))
+                if (index % 100 == 0)  updateMessage("Loaded " + loadedPercentage + "%"); // TODO dla dużych zbiorów można to uruchomić
                 // można jeszcze spróbować rozwiązania z
                 // https://www.mysqltutorial.org/mysql-jdbc-transaction/
                 // gdzie ustawia się na początku po stroworzeniu connection setAutoCommit(false)
